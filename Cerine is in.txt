@@ -1,0 +1,11 @@
+import pandas as pd
+
+# read file and set everything to lowercase
+df = pd.read_csv('dialog_acts.dat') 
+df.columns =['dialog']
+df = df.astype(str)
+df['dialog'].str.lower()
+
+# make two columns with 'dialog act' and 'utterance content'
+df['dialog act'] = df['dialog'].str.split(' ', 1).str[0]  # Part before the space
+df['utterance content'] = df['dialog'].str.split(' ', 1).str[1]  # Part after the space
