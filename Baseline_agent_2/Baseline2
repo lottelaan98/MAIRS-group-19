@@ -1,4 +1,5 @@
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 # read file and set everything to lowercase
 df = pd.read_csv('dialog_acts.dat') 
@@ -34,7 +35,7 @@ for index, row in df_sum.iterrows():
     print() 
 
 df_keywords = {
-    'ack': ['okay', 'um','kay'],
+    'ack': ['okay','um','kay'],
     'affirm': ['yes', 'right'],
     'bye': ['bye', 'thank you'],
     'confirm':['it is', 'it', 'is'],
@@ -46,6 +47,41 @@ df_keywords = {
     'repeat': ['repeat', 'back', 'again'],
     'reqalts': ['how', 'about', 'anything', 'else'],
     'reqmore': ['more'],
+    'request': ['what is', 'address', 'whats', 'phone'],
+    'restart': ['start over', 'reset'],
+    'thankyou': ['thank you', 'bye', 'good', 'goodbye', 'okay']
+}
+
+class baseline2:
+    def __init__(self, dataset):
+        self.data = dataset
+
+    def classify(self, sentence):
+        for dialog_act, keywords in df_keywords.items():
+            for keyword in keywords:
+                if keyword in sentence:
+                    return dialog_act
+        return 'unknown'
+
+    def evaluate(self, X_test, y_test):
+        correct = 0
+        for i in range(len(X_test)):
+            prediction = self.classify(X_test.iloc[i]['utterance content'])
+            if prediction == y_test.iloc[i]:
+                correct += 1
+        return correct / len(X_test)
+    
+
+# Split the dataset into training and testing sets
+X_train, X_test = train_test_split(df, test_size=0.15, random_state=42)
+
+# Instantiate and train the classifier
+classifier = baseline2(X_train)
+
+# Test the performance of the classifier
+# Assuming the dataset has a 'dialog act' column for the correct labels
+accuracy = classifier.evaluate(X_test, X_test['dialog act'])
+print(f"Accuracy: {accuracy:.2f}")
     'request': ['what is', 'address', 'whats', 'phone'],
     'restart': ['start over', 'reset'],
     'thankyou': ['thank you', 'bye', 'good', 'goodbye', 'okay']
