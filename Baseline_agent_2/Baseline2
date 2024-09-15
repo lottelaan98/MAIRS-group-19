@@ -82,7 +82,4 @@ classifier = baseline2(X_train)
 # Assuming the dataset has a 'dialog act' column for the correct labels
 accuracy = classifier.evaluate(X_test, X_test['dialog act'])
 print(f"Accuracy: {accuracy:.2f}")
-    'request': ['what is', 'address', 'whats', 'phone'],
-    'restart': ['start over', 'reset'],
-    'thankyou': ['thank you', 'bye', 'good', 'goodbye', 'okay']
-}
+
