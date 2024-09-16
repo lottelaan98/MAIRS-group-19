@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 dialogAct = 'dialog act'
 utteranceContent = 'utterance content'
 
-# Location of the the data file. Change this according to the path on your own computer
+# Location of the the data file. CHANGE THIS ACCORDING TO THE PATH ON YOUR OWN COMPUTER
 file_path = 'dialog_acts.dat'
 
 # Load the data into a DataFrame
@@ -16,43 +16,8 @@ df[dialogAct] = df[0].apply(lambda x: x.split(' ', 1)[0])
 df[utteranceContent] = df[0].apply(lambda x: x.split(' ', 1)[1])
 df = df.drop(columns=[0])
 
+print(df)
 # BASE-LINE 2: KEYWORD MATCHING
-
-# Put the sentences with the same dialog act together
-df_sum = df.groupby(dialogAct, as_index=False)[utteranceContent].agg(' '.join)
-
-total_word_count = {}
-
-def count_word_frequency(text):
-    """
-    Input = All the words that are in the utterance of a specific dialog act.
-    E.g. From the dialog act 'start over', the input for this function is: 
-    start over start over start over okay start over start over uh start over reset 
-    start over reset can we start over start over oh jesus christ start over start again start over
-
-    This function counts how often a word exists in the given input.
-
-    Example return = {'start': 12, 'over': 11, 'okay': 1, 'uh': 1, 'reset': 2, 'can': 1, 'we': 1, 'oh': 1, 'jesus': 1, 'christ': 1, 'again': 1}
-    """
-    words = text.split()
-    word_count = {}
-    for word in words:
-        word_count[word] = word_count.get(word, 0) + 1
-    return word_count
-
-for index, row in df_sum.iterrows():
-    """
-    Create a dictionary with the most common words as key and as value the frequency of these words.
-    """
-    text = row[utteranceContent]
-    word_dict = count_word_frequency(text)
-    sorted_dict = dict(sorted(word_dict.items(), key=lambda item: item[1], reverse=True))
-    top_10_items = list(sorted_dict.items())[:10]
-    print(f"Dialog Act: {row[dialogAct]}")
-    print("Top 10 words and frequencies:")
-    print(top_10_items)
-    print() 
-
 df_keywords = {
     'request': ['what is', 'address', 'whats', 'phone', 'postcode', 'post code', 'price range', 'type of food', 'area'],
     'thankyou': ['thank you', 'okay'],
@@ -117,3 +82,9 @@ classifier = baseline2(df)
 # Test the performance of the classifier
 accuracy = classifier.evaluate(df)
 print(f"Accuracy: {accuracy:.2f}")
+
+# Sources
+# https://sparkbyexamples.com/pandas/pandas-split-column/#:~:text=In%20Pandas%2C%20the%20apply(),to%20split%20into%20two%20columns.
+# https://www.geeksforgeeks.org/reading-dat-file-in-python/
+# https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.apply.html
+# https://stackoverflow.com/questions/21930035/how-to-write-help-description-text-for-python-functions
