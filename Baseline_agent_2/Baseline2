@@ -1,23 +1,39 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-# read file and set everything to lowercase
-df = pd.read_csv('dialog_acts.dat') 
-df.columns =['dialog']
-df = df.astype(str)
-df['dialog'].str.lower()
+# Frequently used strings
+dialogAct = 'dialog act'
+utteranceContent = 'utterance content'
 
-# make two columns with 'dialog act' and 'utterance content'
-df['dialog act'] = df['dialog'].str.split(' ', 1).str[0]  # Part before the space
-df['utterance content'] = df['dialog'].str.split(' ', 1).str[1]  # Part after the space
+# Location of the the data file. Change this according to the path on your own computer
+file_path = 'dialog_acts.dat'
 
+# Load the data into a DataFrame
+df = pd.read_csv(file_path, delimiter='\t', header=None)
+
+# Split each row into 'dialog act' and 'utterance content'
+df[dialogAct] = df[0].apply(lambda x: x.split(' ', 1)[0])
+df[utteranceContent] = df[0].apply(lambda x: x.split(' ', 1)[1])
+df = df.drop(columns=[0])
 
 # BASE-LINE 2: KEYWORD MATCHING
-df_sum = df.groupby('dialog act', as_index=False)['utterance content'].agg(' '.join)
+
+# Put the sentences with the same dialog act together
+df_sum = df.groupby(dialogAct, as_index=False)[utteranceContent].agg(' '.join)
 
 total_word_count = {}
 
 def count_word_frequency(text):
+    """
+    Input = All the words that are in the utterance of a specific dialog act.
+    E.g. From the dialog act 'start over', the input for this function is: 
+    start over start over start over okay start over start over uh start over reset 
+    start over reset can we start over start over oh jesus christ start over start again start over
+
+    This function counts how often a word exists in the given input.
+
+    Example return = {'start': 12, 'over': 11, 'okay': 1, 'uh': 1, 'reset': 2, 'can': 1, 'we': 1, 'oh': 1, 'jesus': 1, 'christ': 1, 'again': 1}
+    """
     words = text.split()
     word_count = {}
     for word in words:
@@ -25,31 +41,39 @@ def count_word_frequency(text):
     return word_count
 
 for index, row in df_sum.iterrows():
-    text = row['utterance content']
+    """
+    Create a dictionary with the most common words as key and as value the frequency of these words.
+    """
+    text = row[utteranceContent]
     word_dict = count_word_frequency(text)
     sorted_dict = dict(sorted(word_dict.items(), key=lambda item: item[1], reverse=True))
     top_10_items = list(sorted_dict.items())[:10]
-    print(f"Dialog Act: {row['dialog act']}")
+    print(f"Dialog Act: {row[dialogAct]}")
     print("Top 10 words and frequencies:")
     print(top_10_items)
     print() 
 
 df_keywords = {
+    'request': ['what is', 'address', 'whats', 'phone', 'postcode', 'post code', 'price range', 'type of food', 'area'],
+    'thankyou': ['thank you', 'okay'],
     'ack': ['okay','um','kay'],
-    'affirm': ['yes', 'right'],
+    'affirm': ['yes', 'right', 'yea'],
     'bye': ['bye', 'thank you'],
-    'confirm':['it is', 'it', 'is'],
+    'null': ['noise', 'sil', 'unintelligible', 'cough'],
+    'reqalts': ['how about', 'how', 'about', 'else', 'is there anything else', 'anything else', 'is there anything else'],        
+    'inform': ['food', 'restaurant', 'town', 'i dont care', 'dont care', 'it doesnt matter', 'doesnt matter', 
+               'center', 'north', 'east', 'south', 'west', 'any area', 'any price range', 'anything', 'moderate', 
+               'cheap', 'expensive', 'any', 'thai', 'tailand', 'lebanese', 'italian', 'italian food', 'chinese', 
+               'chinese food', 'spanish', 'spanish food', 'french', 'portuguese', 'korean', 'turkish', 'asian oriental', 
+               'indian', 'vietnamese', 'british food', 'european', 'mediterranean', 'mediterranean food', 'gastropub',
+               'moderately'],
     'deny': ['wrong', 'want', 'dont'],
-    'hello': ['hi', 'hello'],
-    'inform': ['food', 'restaurant', 'town'],
-    'negate': ['no'],
-    'null': ['noise', 'sil', 'unintelligible'],
-    'repeat': ['repeat', 'back', 'again'],
-    'reqalts': ['how', 'about', 'anything', 'else'],
-    'reqmore': ['more'],
-    'request': ['what is', 'address', 'whats', 'phone'],
+    'negate': ['no'],    
+    'repeat': ['repeat', 'back', 'again'],    
+    'reqmore': ['more'],    
     'restart': ['start over', 'reset'],
-    'thankyou': ['thank you', 'bye', 'good', 'goodbye', 'okay']
+    'hello': ['hi', 'hello'], 
+    'confirm':['it is', 'it', 'is'], 
 }
 
 class baseline2:
@@ -57,29 +81,39 @@ class baseline2:
         self.data = dataset
 
     def classify(self, sentence):
+        """
+        Finds the dialog act of a given sentence by looping over the keywords dictionary.
+        Returns the predicted dialog act.        
+        """
+        # Loop over our chosen keywords
         for dialog_act, keywords in df_keywords.items():
             for keyword in keywords:
                 if keyword in sentence:
                     return dialog_act
         return 'unknown'
 
-    def evaluate(self, X_test, y_test):
+    def evaluate(self, dataset):
+        """
+        Evaluates our keyword classifier.
+        Returns the ratio of correctly predicted dialog acts to the total number of dialog acts.
+        """
         correct = 0
-        for i in range(len(X_test)):
-            prediction = self.classify(X_test.iloc[i]['utterance content'])
-            if prediction == y_test.iloc[i]:
+
+        for _, row in dataset.iterrows():
+            # Get the actual dialog act and utterance content
+            dialog_act = row[dialogAct]
+            utterance = row[utteranceContent]
+            
+            # Classify the utterance
+            prediction = self.classify(utterance)            
+            
+            # Check if the prediction matches the actual dialog act
+            if prediction == dialog_act:
                 correct += 1
-        return correct / len(X_test)
-    
 
-# Split the dataset into training and testing sets
-X_train, X_test = train_test_split(df, test_size=0.15, random_state=42)
+        return correct / len(dataset)
 
-# Instantiate and train the classifier
-classifier = baseline2(X_train)
-
+classifier = baseline2(df)
 # Test the performance of the classifier
-# Assuming the dataset has a 'dialog act' column for the correct labels
-accuracy = classifier.evaluate(X_test, X_test['dialog act'])
+accuracy = classifier.evaluate(df)
 print(f"Accuracy: {accuracy:.2f}")
-
