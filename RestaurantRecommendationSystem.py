@@ -10,17 +10,58 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score
 
+# This dictionary contains as keys all the possible dialog states. The values of these keys are the possible subsequent states.
 dialog_state_dictionary = {
     "Welcome": {
         "AskForMissingInfo",
         "AskUserForClarification",
         "AskForConfirmation",
-        "InformUser",
+        "InformThatThereIsNoRestaurant",
         "GiveRestaurantRecommendation"
     },
     "AskForMissingInfo": {
-        
-    }
+        "AskForMissingInfo",
+        "AskUserForClarification",
+        "AskForConfirmation",
+        "InformThatThereIsNoRestaurant",
+        "GiveRestaurantRecommendation"
+    },
+    "AskUserForClarification": {
+        "AskUserForClarification",
+        "InformThatThereIsNoRestaurant",
+        "GiveRestaurantRecommendation"
+    },
+    "AskForConfirmation": {
+        "AskForMissingInfo",
+        "AskUserForClarification",
+        "AskForConfirmation",
+        "InformThatThereIsNoRestaurant",
+        "GiveRestaurantRecommendation"
+    },
+    "InformThatThereIsNoRestaurant": {
+        "AskForMissingInfo",
+        "AskUserForClarification",
+        "AskForConfirmation",
+        "InformThatThereIsNoRestaurant",
+        "GiveRestaurantRecommendation",
+        "ProvideAlternativeSuggestion",
+    },
+    "GiveRestaurantRecommendation": {
+        "AnswerAdditionalQuestion",
+        "ProvideContactInformation",
+    },
+    "ProvideAlternativeSuggestion": {
+        "AnswerAdditionalQuestion",
+        "ProvideContactInformation",
+    },
+    "AnswerAdditionalQuestion": {
+        "AnswerAdditionalQuestion",
+        "ProvideContactInformation",
+    },
+    "ProvideContactInformation": {
+        "AnswerAdditionalQuestion",
+        "End",
+    },
 }
 
 def dialog_system():
