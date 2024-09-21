@@ -64,16 +64,43 @@ dialog_state_dictionary = {
     },
 }
 
-def dialog_system():
-    current_state = "Welcome"
-    print("System:  Hello, welcome to the UU restaurant system! You can ask for restaurants by area, price range or food type. How may I help you?")
+class SystemDialog:
+    def __init__(self):
+        self.current_state = "Welcome"
 
-    while current_state != "End":
-        user_input = input("Me: ").lower()
+    def new_state(self, user_input) -> str:
+    
+        return user_input
+
+    def process_user_input(self, input) -> str:
+        # 1. classify user_input
+
+        # IF DIALOG_ACT == REQUALTS | INFORM | REQUEST
+        #   THEN: use keyword matching algorithm for extracting preferences like type=restaurant, area=north
+        #   no match found? -> Use python-Levenshtein algorithm
         
-      
-        print("System: test", user_input)
+        # IF THERE IS SUFFICIENT INFO: Find restaurant that meets the needs
 
-    print("System: Bye!")
+        self.new_state(input)
+        # generate system utterance
+        output = "Deze input: " + input + " moet nog leuke output genereren."
+        # output = requalts(food=european) | inform(=dont care) | inform(type=restaurant) | request(add, phone)
 
-dialog_system()
+        return output
+
+
+
+    def dialog_system(self):
+        current_state = "Welcome"
+        print("System:  Hello, welcome to the UU restaurant system! You can ask for restaurants by area, price range or food type. How may I help you?")
+
+        while current_state != "End":
+            user_input = input("Me: ").lower()
+            
+            system_utterence = self.process_user_input(user_input)
+        
+            print("System: ", system_utterence)
+
+        print("System: Bye!")
+
+SystemDialog.dialog_system()
