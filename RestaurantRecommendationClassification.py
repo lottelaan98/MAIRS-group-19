@@ -44,7 +44,7 @@ def perform_classifications():
     svm = SVM(df)
     svm.perform_svm()
 
-    # Random 
+    # Random forest
     print('Start Random Forest classifier...')
     random_forest = RandomForest(df)
     random_forest.perform_random_forest()

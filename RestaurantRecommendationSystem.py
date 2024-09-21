@@ -4,11 +4,13 @@ from Baseline1 import Baseline1
 from Baseline2 import Baseline2
 from SVM import SVM
 from RandomForest import RandomForest
+from RestaurantRecommendationClassification import load_data
 from collections import Counter
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score
+
 
 # This dictionary contains as keys all the possible dialog states. The values of these keys are the possible subsequent states.
 dialog_state_dictionary = {
@@ -67,27 +69,47 @@ dialog_state_dictionary = {
 class SystemDialog:
     def __init__(self):
         self.current_state = "Welcome"
+        self.rf_classifier = self.train_random_forest_classifier()
+
+    def train_random_forest_classifier(self):
+        """
+        Trains the classifier in the Random Forest object, so that it can be used to classify user utterances.
+        """
+        df = load_data()
+
+        # Random Forest 
+        print('One moment please...')
+        random_forest = RandomForest(df)
+        random_forest.perform_random_forest()
+
+        return random_forest.rf_classifier
 
     def new_state(self, user_input) -> str:
-    
-        return user_input
+        """
+        Changes the current_state and returns the system output
+        """
 
+        # output = requalts(food=european) | inform(=dont care) | inform(type=restaurant) | request(add, phone)
+        return ""
+    
     def process_user_input(self, input) -> str:
         # 1. classify user_input
 
-        # IF DIALOG_ACT == REQUALTS | INFORM | REQUEST
+        # 2.
+        # IF DIALOG_ACT == REQUALTS | INFORM | REQUEST | NEGATE
         #   THEN: use keyword matching algorithm for extracting preferences like type=restaurant, area=north
         #   no match found? -> Use python-Levenshtein algorithm
+        # ELSE:
+        #       Think about what to do in nother cases like affirm(), reqmore() etc.
         
+        # 3.
         # IF THERE IS SUFFICIENT INFO: Find restaurant that meets the needs
 
-        self.new_state(input)
-        # generate system utterance
-        output = "Deze input: " + input + " moet nog leuke output genereren."
-        # output = requalts(food=european) | inform(=dont care) | inform(type=restaurant) | request(add, phone)
+        # 4.
+        # Move to new state and generate the system utterance
+        output = self.new_state(input)       
 
         return output
-
 
 
     def dialog_system(self):
@@ -103,4 +125,5 @@ class SystemDialog:
 
         print("System: Bye!")
 
-SystemDialog.dialog_system()
+system_dialog = SystemDialog()
+system_dialog.dialog_system()
