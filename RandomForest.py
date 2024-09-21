@@ -4,53 +4,37 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score
 
-# Function to separate the first word from the rest of the sentence
-def separate_first_word(text):
-    first_space_index = text.find(' ')  
-    first_word = text[:first_space_index]  
-    rest_of_sentence = text[first_space_index+1:]  
-    return first_word, rest_of_sentence
+class RandomForest: 
+    def __init__(self, dataset):
+        self.original_dataset = dataset
+        self.dataset_without_duplicates = self.original_dataset.drop_duplicates()
 
-df = pd.read_csv('/Users/youssefbenmansour/Downloads/dialog_acts.dat')   
-df.rename(columns={'inform im looking for a moderately priced restaurant that serves': 'dialog'}, inplace=True)
-  
-for i, row in df.iterrows():
-    first, second = separate_first_word(row['dialog'])  
-    df.at[i, 'dialog'] = second  
-    df.at[i, 'class_label'] = first
+    def find_x_and_y(self, dataset):
+        # Dataset with duplicates
+        vect = TfidfVectorizer(max_features=500)  
+        x = vect.fit_transform(dataset['utterance content'])  
+        y = dataset['dialog act']  
 
+        return x, y
+    
+    def train_and_test(self, x, y):
+        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+        rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+        rf_classifier.fit(x_train, y_train)
+        y_pred = rf_classifier.predict(x_test)
 
-class_labels = df['class_label'].unique()
-# class_labels = ['ack', 'affirm', 'bye', 'confirm', 'deny', 'hello', 'inform', 'negate', 'null', 'repeat','reqalts','reqmore','request','restart','thankyou']
+        return y_test, y_pred
 
-df2 = df
-df2 = df2.drop_duplicates()
+    def perform_random_forest(self):
+        # Dataset with duplicates
+        x, y = self.find_x_and_y(self.original_dataset) 
+        y_test, y_pred = self.train_and_test(x, y)        
+        print("Accuracy with duplicates:", accuracy_score(y_test, y_pred))
 
-# Dataset with duplicates
-vect = TfidfVectorizer(max_features=500)  
-X = vect.fit_transform(df['dialog'])  
-y = df['class_label']  
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
-rf_classifier.fit(X_train, y_train)
-y_pred = rf_classifier.predict(X_test)
-print("Accuracy with duplicates:", accuracy_score(y_test, y_pred))
-
-
-
-# Dataset without duplicates
-vect = TfidfVectorizer(max_features=500)  
-X = vect.fit_transform(df2['dialog'])  
-y = df2['class_label']  
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
-rf_classifier.fit(X_train, y_train)
-y_pred = rf_classifier.predict(X_test)
-print("Accuracy without duplicates:", accuracy_score(y_test, y_pred))
+        # Dataset without duplicates
+        x, y = self.find_x_and_y(self.dataset_without_duplicates)        
+        y_test, y_pred = self.train_and_test(x, y)
+        print("Accuracy without duplicates:", accuracy_score(y_test, y_pred))
 
 
 
