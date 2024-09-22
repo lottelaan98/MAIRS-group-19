@@ -27,6 +27,14 @@ def read_data_as_df():
     df = pd.read_csv('dialog_acts.dat', header=None)
     return df
 
+def detect_faults(df):
+    index_list = []
+    for i in range(len(df)):
+         label = df.iloc[i][0].split(" ")[0]
+         if label == "null":
+             index_list.append(i)   
+    return index_list
+
 def form_baseline(data, prediction):
     total = len(data)
     counter = 0
@@ -79,4 +87,7 @@ def SVM():
     print(clas_rep)
     
     
-SVM()
+# SVM()
+df = read_data_as_df()
+index_list = detect_faults(df)
+print(len(index_list))
