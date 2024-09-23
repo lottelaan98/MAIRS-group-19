@@ -5,8 +5,6 @@ from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 
-
-# DIT DEEL MAG IN GENERAL
 class SVM:
     """
     Support Vector Machine classifies utterances based on the most common class
