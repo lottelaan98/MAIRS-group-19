@@ -10,25 +10,17 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score
+import Levenshtein
 
-def load_data() -> pd.DataFrame:
-    # Location of the the data file. CHANGE THIS ACCORDING TO THE PATH ON YOUR OWN COMPUTER
-    df_rest = pd.read_csv('1b_restaurant_info.csv') 
-    df_rest = df_rest.astype(str)
-    
-    df_rest = df_rest.rename(columns={'restaurantname,"pricerange","area","food","phone","addr","postcode"': 'data'})
+##################################################################################################################
+#############################        CHANGE THE PATH TO MATCH YOUR COMPUTER           #############################
+##################################################################################################################
 
-    # Split each row into 'restaurantname', 'pricerange', 'area', 'food', 'phone', 'address', and 'postcode'
-    df_rest['restaurantname'] = df_rest['data'].apply(lambda x: x.split(',"')[0])
-    df_rest['pricerange'] = df_rest['data'].apply(lambda x: x.split(',')[1])
-    df_rest['area'] = df_rest['data'].apply(lambda x: x.split(',')[2])
-    df_rest['food'] = df_rest['data'].apply(lambda x: x.split(',')[3])
-    df_rest['phone'] = df_rest['data'].apply(lambda x: x.split(',')[4])
-    df_rest['address'] = df_rest['data'].apply(lambda x: x.split(',')[5])
-    df_rest['postcode'] = df_rest['data'].apply(lambda x: x.split(',')[6])
-    df_rest = df_rest.applymap(lambda x: x.replace('"', '') if isinstance(x, str) else x)
-    df_rest = df_rest.drop(columns=['data'])
-    return df_rest
+
+file_path_restaurant = '/Users/youssefbenmansour/Downloads/restaurant_info.csv'
+
+file_path_dialog = "/Users/youssefbenmansour/Downloads/dialog_acts.dat"
+
 
 # This dictionary contains as keys all the possible dialog states. The values of these keys are the possible subsequent states.
 dialog_state_dictionary = {
@@ -86,8 +78,13 @@ dialog_state_dictionary = {
 
 class SystemDialog:
     def __init__(self):
+        self.preference = {}
         self.current_state = "Welcome"
         self.rf_classifier = self.train_random_forest_classifier()
+
+    def change_state(self):
+        self.current_state = "End"
+       
 
     def train_random_forest_classifier(self):
         """
@@ -110,11 +107,15 @@ class SystemDialog:
         # output = requalts(food=european) | inform(=dont care) | inform(type=restaurant) | request(add, phone)
         return ""
 
-    def process_user_input(self, user_input) -> str:
+    def process_user_input(self, user_input ) -> str:
+
+         # Location of the the data file. CHANGE THIS ACCORDING TO THE PATH ON YOUR OWN COMPUTER
+        df_rest = pd.read_csv(file_path_restaurant)
+
+
         # 1. Classify user input using the trained Random Forest classifier
 
         # 2. Extract preferences
-        preferences = {}
         keywords = {
             'pricerange': ['cheap', 'moderate', 'expensive'],
             'area': ['north', 'south', 'east', 'west', 'centre'],
@@ -130,53 +131,63 @@ class SystemDialog:
         for key, words in keywords.items():
             for word in words:
                 if word in user_input:
-                    preferences[key] = word
+                    self.preference[key] = word
+
         
         # Use Levenshtein algorithm if no matches found
-        if not preferences:
-            import Levenshtein
+        if not self.preference:
             for key, words in keywords.items():
                 for word in words:
                     if any(Levenshtein.ratio(word, token) > 0.8 for token in user_input.split()):
-                        preferences[key] = word
+                        self.preference[key] = word
 
         # 3. Check if there is sufficient info to recommend a restaurant
         info_match = ['pricerange', 'area', 'food']
-        match = all(info in preferences for info in info_match)
+        match = all(info in self.preference for info in info_match)
         
         if match:
             # Find restaurant that meets the needs
-            restaurant = self.find_restaurant(preferences, df_rest)
-            if restaurant:
-                return f"I recommend {df_rest['restaurantname']} in the {df_rest['area']} area, serving {df_rest['food']} cuisine, with {df_rest['price']} prices. The address is [df_rest['address']}, postcode {df_rest['postcode']}. The phonenumber is {df_rest['phone']}."
+            restaurant = self.find_restaurant(df_rest)
+            if restaurant.any() != None:
+                self.change_state()
+                return f"I recommend {restaurant['restaurantname']} in the {restaurant['area']} area, serving {restaurant['food']} cuisine, with {restaurant['pricerange']} prices. The address is {restaurant['addr']}, postcode {restaurant['postcode']}. The phonenumber is {restaurant['phone']}."
             else:
-                return "Sorry, I couldn't find a restaurant that matches your preferences."
+                return "Sorry, I couldn't find a restaurant that matches your self.preference."
         else:
             # Ask for missing info if not enough data
-            missing_info = [info for info in info_match if info not in preferences]
+            missing_info = [info for info in info_match if info not in self.preference]
             return f"Could you provide more information about {missing_info}?"
 
         # 4. Move to the new state and generate the system utterance
         output = self.new_state(user_input)
         return output
 
-    def find_restaurant(self, preferences, data_restaurants):
-        
-        for restaurant in data_restaurants:
-            if all(preferences[key] == restaurant[key] for key in preferences):
-                return restaurant
-        return None
+    def find_restaurant(self, test_T):
+        data_restaurants = pd.read_csv(file_path_restaurant)
+        filtered_df = data_restaurants
+        criteria = self.preference
+    # Loop through each criterion and apply the filter
+        for key, value in criteria.items():
+            filtered_df = filtered_df[filtered_df[key] == value]
+    
+     # Check if there are any matching restaurants
+        if not filtered_df.empty:
+        # Return the name of the first matching restaurant
+            return filtered_df.iloc[0]
+        else:
+            return None
 
     def dialog_system(self):
         current_state = "Welcome"
         print("System:  Hello, welcome to the UU restaurant system! You can ask for restaurants by area, price range or food type. How may I help you?")
 
-        while current_state != "End":
+        while self.current_state != "End":
             user_input = input("Me: ").lower()
             
             system_utterence = self.process_user_input(user_input)
-        
+            
             print("System: ", system_utterence)
+            
 
         print("System: Bye!")
 

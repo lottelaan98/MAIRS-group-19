@@ -48,4 +48,3 @@ class SVM:
             print(class_report)
     
     
-SVM()

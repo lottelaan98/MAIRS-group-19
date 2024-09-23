@@ -12,7 +12,7 @@ class RandomForest:
         self.vectorizer = TfidfVectorizer(max_features=500)  
 
     def find_x_and_y(self, dataset):
-        # Dataset with duplicates
+        dataset.rename(columns={'inform im looking for a moderately priced restaurant that serves': 'utterance content'}, inplace=True)
         x = self.vectorizer.fit_transform(dataset['utterance content'])  
         y = dataset['dialog act']  
 
