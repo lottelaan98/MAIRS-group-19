@@ -13,7 +13,7 @@ from sklearn.metrics import classification_report, accuracy_score
 import Levenshtein
 from sklearn.feature_extraction.text import TfidfVectorizer
 import joblib
-
+from StateTransitions import States
 
 
 ##################################################################################################################
@@ -21,14 +21,15 @@ import joblib
 ##################################################################################################################
 
 
-file_path_restaurant = '/Users/youssefbenmansour/Downloads/restaurant_info.csv'
+file_path_restaurant = "C:\\Users\\toube\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\restaurant_info.csv"
 
-file_path_dialog = "/Users/youssefbenmansour/Downloads/dialog_acts.dat"
+file_path_dialog = "C:\\Users\\toube\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
 
 
 # This dictionary contains as keys all the possible dialog states. The values of these keys are the possible subsequent states.
 dialog_state_dictionary = {
     "Welcome": {
+        "Welcome",
         "AskForMissingInfo",
         "AskUserForClarification",
         "AskForConfirmation",
@@ -78,6 +79,7 @@ dialog_state_dictionary = {
         "AnswerAdditionalQuestion",
         "End",
     },
+    "End": {}
 }
 
 class SystemDialog:
@@ -102,8 +104,13 @@ class SystemDialog:
 
     def new_state(self, user_input) -> str:
         """
-        Changes the current_state and returns the system output
+        Changes the current_state and uses the user_input. Returns the system output and the system utterance.
         """
+
+        preprocessed_input = self.vectorizer.transform([user_input.lower()])  # Transform input to match the trained model
+        predicted_class: str = self.random_forest.rf_classifier.predict(preprocessed_input)[0]  
+
+        States.Welcome(predicted_class)
 
         # output = requalts(food=european) | inform(=dont care) | inform(type=restaurant) | request(add, phone)
         return ""
@@ -121,12 +128,12 @@ class SystemDialog:
         keywords = {
             'pricerange': ['cheap', 'moderate', 'expensive'],
             'area': ['north', 'south', 'east', 'west', 'centre'],
-            'food': ["indian", "british", "chinese", "european", "italian", "asian oriental", "thai", 
+            'food': ["indian", "british", "dutch", "english", "chinese", "european", "italian", "asian oriental", "thai", 
                                    "spanish", "gastropub", "modern european", "seafood", "mediterranean", "portuguese", 
                                    "turkish", "international", "korean", "french", "jamaican", "persian", "japanese", 
                                    "lebanese", "australasian", "north american", "cuban", "bistro", "fusion", "african", 
                                    "polynesian", "traditional", "tuscan", "swiss", "moroccan", "vietnamese", "steakhouse", 
-                                   "romanian", "catalan"],
+                                   "romanian", "catalan", "swedish"],
         }
         
 
@@ -135,20 +142,26 @@ class SystemDialog:
             for key in keywords.keys():
                 if key not in self.preference:
                     self.preference[key] = 'any'
+                    print('SELF.PREFERENCE in any handle = ', self.preference)
 
-        # Keyword matching
+        # Keyword matching: Check if there is a preference expressed in the user input
         for key, words in keywords.items():
             for word in words:
                 if word in user_input:
                     self.preference[key] = word
+                    print('SELF.PREFERENCE in keyword matching = ', self.preference)
+
 
         
         # Use Levenshtein algorithm if no matches found
-        if not self.preference:
+        if not self.preference: # TODO: HIJ CHECK NU OF DICTIONARY AL EEN WAARDE HEEFT. GEEF ANDER IF-STATEMENT
+            print('now in Levenshtein')
             for key, words in keywords.items():
                 for word in words:
                     if any(Levenshtein.ratio(word, token) > 0.8 for token in user_input.split()):
                         self.preference[key] = word
+                        print('SELF.PREFERENCE in Levenshtein = ', self.preference)
+
 
         # 3. Check if there is sufficient info to recommend a restaurant
         info_match = ['pricerange', 'area', 'food']
@@ -156,8 +169,9 @@ class SystemDialog:
 
 
         preprocessed_input = self.vectorizer.transform([user_input.lower()])  # Transform input to match the trained model
-        predicted_class = self.random_forest.rf_classifier.predict(preprocessed_input)[0]  
+        predicted_class: str = self.random_forest.rf_classifier.predict(preprocessed_input)[0]  
 
+        print('PREDICTED CLASS = ', predicted_class)
         if(predicted_class == 'bye' or predicted_class == 'thankyou' ):
             self.current_state = "finish"
             return
