@@ -13,11 +13,14 @@ class SVM:
         self.dataset = dataset
         self.dataset_without_duplicates = self.dataset.drop_duplicates()
     
-    def vectorize(self, dataset):
-        vectorizer = TfidfVectorizer()
-        X = vectorizer.fit_transform(dataset['utterance content'])
+    def vectorize(self, dataset, vectorizer=None):
+        if vectorizer is None:
+            vectorizer = TfidfVectorizer()
+            X = vectorizer.fit_transform(dataset['utterance content'])
+        else:
+            X = vectorizer.transform(dataset['utterance content'])
         y = dataset['dialog act']
-        return X, y
+        return X, y, vectorizer
 
     def split_data(self, x, y):
         x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.15, random_state=42)
@@ -75,20 +78,32 @@ class SVM:
         data = [(key, phrase) for key, phrases in keywords.items() for phrase in phrases]
         
         df = pd.DataFrame(data, columns=['dialog act', 'utterance content'])
-        return df['dialog act'], df['utterance content']
+        return df
 
     def perform_svm(self):
-            x, y = self.vectorize(self.dataset)
-            x_train, x_test, y_train, y_test = self.split_data(x, y)
-            fitted_svm = self.fit_svm(x_train, y_train)
-            # test it for difficult cases
-            # y_diff, x_diff = self.difficult_cases()
-            # y_pred = self.make_prediction(x_test, fitted_svm)
-            y_pred = self.make_prediction(x_test, fitted_svm)
-
-            # Create a report of the results
-            class_report = self.report(y_test, y_pred)
-            print(class_report)
+        x, y = self.vectorize(self.dataset)
+        x_train, x_test, y_train, y_test = self.split_data(x, y)
+        fitted_svm = self.fit_svm(x_train, y_train)
+        y_pred = self.make_prediction(x_test, fitted_svm)
+        # Create a report of the results
+        class_report = self.report(y_test, y_pred)
+        print(class_report)
+            
+    def perform_svm_difficult(self):
+        # load the vectorized version of the difficult cases
+        df = self.difficult_cases()
+        # vectorize the dialog-acts dataset and the difficult instances dataset
+        x, y, vectorizer = self.vectorize(self.dataset)
+        x_vec_diff, y_vec_diff, _ = self.vectorize(df, vectorizer=vectorizer)
+        # split the original dataset
+        x_train, _, y_train, _ = self.split_data(x, y)
+        # fit the svm on the train dataset
+        fitted_svm = self.fit_svm(x_train, y_train)
+        # prediction
+        y_pred = self.make_prediction(x_vec_diff, fitted_svm)
+        # Create a report of the results
+        class_report = self.report(y_vec_diff, y_pred)
+        print(class_report)
             
             
     

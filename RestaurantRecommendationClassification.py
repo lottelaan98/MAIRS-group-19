@@ -53,4 +53,4 @@ def perform_classifications():
 # perform_classifications()
 df = load_data()
 svm = SVM(df)
-svm.perform_svm()
+svm.perform_svm_difficult()
