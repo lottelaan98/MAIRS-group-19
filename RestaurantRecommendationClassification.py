@@ -9,11 +9,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score
+# from RestaurantRecommendationSystem import file_path_dialog
 
+file_path_dialog = "/Users/youssefbenmansour/Downloads/dialog_acts.dat"
 
 def load_data() -> pd.DataFrame:
     # Location of the the data file. CHANGE THIS ACCORDING TO THE PATH ON YOUR OWN COMPUTER
-    file_path = "/Users/youssefbenmansour/Downloads/dialog_acts.dat"
+    file_path = file_path_dialog
 
     # Load the data into a DataFrame
     df = pd.read_csv(file_path, delimiter='\t', header=None)
