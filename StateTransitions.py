@@ -15,7 +15,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 import joblib
 
 
-
 ##################################################################################################################
 #############################        CHANGE THE PATH TO MATCH YOUR COMPUTER           #############################
 ##################################################################################################################
@@ -33,26 +32,26 @@ dialog_state_dictionary = {
         "AskUserForClarification",
         "AskForConfirmation",
         "InformThatThereIsNoRestaurant",
-        "GiveRestaurantRecommendation"
+        "GiveRestaurantRecommendation",
     },
     "AskForMissingInfo": {
         "AskForMissingInfo",
         "AskUserForClarification",
         "AskForConfirmation",
         "InformThatThereIsNoRestaurant",
-        "GiveRestaurantRecommendation"
+        "GiveRestaurantRecommendation",
     },
     "AskUserForClarification": {
         "AskUserForClarification",
         "InformThatThereIsNoRestaurant",
-        "GiveRestaurantRecommendation"
+        "GiveRestaurantRecommendation",
     },
     "AskForConfirmation": {
         "AskForMissingInfo",
         "AskUserForClarification",
         "AskForConfirmation",
         "InformThatThereIsNoRestaurant",
-        "GiveRestaurantRecommendation"
+        "GiveRestaurantRecommendation",
     },
     "InformThatThereIsNoRestaurant": {
         "AskForMissingInfo",
@@ -78,53 +77,52 @@ dialog_state_dictionary = {
         "AnswerAdditionalQuestion",
         "End",
     },
-    "End": {}
+    "End": {},
 }
+
 
 class States:
     def __init__(self):
         self.current_state = "Welcome"
 
     def Welcome(dialog_act):
-        """
-        """
-        if(dialog_act == "hello"):
+        """ """
+        if dialog_act == "hello":
             return "Welcome"
-        if(dialog_act == "inform"):
+        if dialog_act == "inform":
             return "AskForMissingInfo"
-        if(x == 3):
+        if x == 3:
             return "AskUserForClarification"
-        if(x == 4):
+        if x == 4:
             return "AskForConfirmation"
-        if(x == 5):
+        if x == 5:
             return "InformThatThereIsNoRestaurant"
-        if(x == 6):
+        if x == 6:
             return "GiveRestaurantRecommendation"
+
     def AskForMissingInfo():
-        """
-        """
+        """ """
+
     def AskUserForClarification():
-        """
-        """
+        """ """
+
     def AskForConfirmation():
-        """
-        """
+        """ """
+
     def InformThatThereIsNoRestaurant():
-        """
-        """
+        """ """
+
     def GiveRestaurantRecommendation():
-        """
-        """
+        """ """
+
     def ProvideAlternativeSuggestion():
-        """
-        """
+        """ """
+
     def AnswerAdditionalQuestion():
-        """
-        """
+        """ """
+
     def ProvideContactInformation():
-        """
-        """
+        """ """
+
     def End():
-        """
-        """
-        
+        """ """
