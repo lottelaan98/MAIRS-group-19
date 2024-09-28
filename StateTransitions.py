@@ -168,6 +168,18 @@ class State_Helpers:
             state.still_needed_info,
         )
         return "Sorry I can't hear you"  # TODO deze kiezen of valueError
+    
+    def deny(state, utterance):
+        if ", right?" in state.last_system_utterance:
+            # The pricerange was wrong
+            if "Let me confirm" in state.last_system_utterance:
+                state.still_needed_info.add("pricerange")
+                del state.user_preferences("pricerange") 
+            elif "You are looking for a " in state.last_system_utterance:
+                state.still_needed_info.add("food")
+                del state.user_preferences("food") 
+
+
 
     def confirm(type_of_preference, content):
         rest_of_sentence = ""
