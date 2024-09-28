@@ -12,7 +12,7 @@ from sklearn.metrics import classification_report, accuracy_score
 
 # from RestaurantRecommendationSystem import file_path_dialog
 
-file_path_dialog = "C:\\Users\\toube\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
+file_path_dialog = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
 
 
 def load_data() -> pd.DataFrame:

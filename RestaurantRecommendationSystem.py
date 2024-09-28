@@ -21,9 +21,9 @@ from StateTransitions import States
 ##################################################################################################################
 
 
-file_path_restaurant = "C:\\Users\\toube\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\restaurant_info.csv"
+file_path_restaurant = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\restaurant_info.csv"
 
-file_path_dialog = "C:\\Users\\toube\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
+file_path_dialog = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
 
 
 # This dictionary contains as keys all the possible dialog states. The values of these keys are the possible subsequent states.
@@ -85,14 +85,17 @@ dialog_state_dictionary = {
 
 class SystemDialog:
     def __init__(self):
-        self.preference = {}
-        self.current_state = "Welcome"
+        self.user_preferences = {}  # MAG MISSCHIEN OOK WEG. zit in States()
+        self.current_state = "Welcome"  # REMOVE THIS zit in self.state
         self.random_forest = (
             self.train_random_forest_classifier()
         )  # Store the instance here
         self.vectorizer = (
             self.random_forest.vectorizer
         )  # Access vectorizer after initialization
+        self.state = States()
+        self.turn_index = 0
+        
 
     def train_random_forest_classifier(self):
         df = load_data()
@@ -109,7 +112,7 @@ class SystemDialog:
 
     def new_state(self, user_input) -> str:
         """
-        Changes the current_state and uses the user_input. Returns the system output and the system utterance.
+        Changes the current_state and uses the user_input. Returns the system output (system utterance).
         """
 
         preprocessed_input = self.vectorizer.transform(
@@ -119,7 +122,8 @@ class SystemDialog:
             preprocessed_input
         )[0]
 
-        States.Welcome(predicted_class)
+        # Beredeneer met de predicted class wat de nieuwe state wordt en de system utterance
+        system_utterance = States.Welcome(predicted_class)
 
         # output = requalts(food=european) | inform(=dont care) | inform(type=restaurant) | request(add, phone)
         return ""
@@ -127,88 +131,16 @@ class SystemDialog:
     def process_user_input(self, user_input) -> str:
 
         # Location of the the data file. CHANGE THIS ACCORDING TO THE PATH ON YOUR OWN COMPUTER
-        df_rest = pd.read_csv(file_path_restaurant)
 
         # 1. Classify user input using the trained Random Forest classifier
 
         # 2. Extract preferences
-        keywords = {
-            "pricerange": ["cheap", "moderate", "expensive"],
-            "area": ["north", "south", "east", "west", "centre"],
-            "food": [           
-                "african",
-                "asian oriental",
-                "australasian",
-                "bistro",
-                "british",
-                "catalan",
-                "chinese",
-                "cuban",
-                "dutch",
-                "english",
-                "european",
-                "french",
-                "fusion",
-                "gastropub",
-                "indian",
-                "international",
-                "italian",
-                "jamaican",
-                "japanese",
-                "korean",
-                "lebanese",
-                "mediterranean",
-                "modern european",
-                "moroccan",
-                "north american",
-                "persian",
-                "polynesian",
-                "portuguese",
-                "romanian",
-                "seafood",
-                "spanish",
-                "steakhouse",
-                "swedish",
-                "swiss",
-                "thai",
-                "traditional",
-                "turkish",
-                "tuscan",
-                "vietnamese",
-            ],
-        }
 
-        # Handle 'any' as a wildcard
-        if "any" in user_input:
-            for key in keywords.keys():
-                if key not in self.preference:
-                    self.preference[key] = "any"
-                    print("SELF.PREFERENCE in any handle = ", self.preference)
-
-        # Keyword matching: Check if there is a preference expressed in the user input
-        for key, words in keywords.items():
-            for word in words:
-                if word in user_input:
-                    self.preference[key] = word
-                    print("SELF.PREFERENCE in keyword matching = ", self.preference)
-
-        # Use Levenshtein algorithm if no matches found
-        if (
-            not self.preference
-        ):  # TODO: HIJ CHECK NU OF DICTIONARY AL EEN WAARDE HEEFT. GEEF ANDER IF-STATEMENT
-            print("now in Levenshtein")
-            for key, words in keywords.items():
-                for word in words:
-                    if any(
-                        Levenshtein.ratio(word, token) > 0.8
-                        for token in user_input.split()
-                    ):
-                        self.preference[key] = word
-                        print("SELF.PREFERENCE in Levenshtein = ", self.preference)
+        self.state.helpers.extract_preferences(user_input)
 
         # 3. Check if there is sufficient info to recommend a restaurant
         info_match = ["pricerange", "area", "food"]
-        match = all(info in self.preference for info in info_match)
+        match = all(info in self.user_preferences for info in info_match)
 
         preprocessed_input = self.vectorizer.transform(
             [user_input.lower()]
@@ -235,17 +167,13 @@ class SystemDialog:
         """
 
         if match:
-            # Find restaurant that meets the needs
-            restaurant = self.find_restaurant(df_rest)
-            if restaurant is None:
-                return "Sorry, I couldn't find a restaurant that matches your self.preference. Can you change your requirements"
-            else:
-                self.change_state()
-                return f"I recommend {restaurant['restaurantname']} in the {restaurant['area']} area, serving {restaurant['food']} cuisine, with {restaurant['pricerange']} prices. The address is {restaurant['addr']}, postcode {restaurant['postcode']}. The phonenumber is {restaurant['phone']}."
+           
 
         else:
             # Ask for missing info if not enough data
-            missing_info = [info for info in info_match if info not in self.preference]
+            missing_info = [
+                info for info in info_match if info not in self.user_preferences
+            ]
             # my_list = missing_info.copy()
             # text_of_missing = self.printmissing(my_list)
             result = ""
@@ -262,22 +190,7 @@ class SystemDialog:
         output = self.new_state(user_input)
         return output
 
-    def find_restaurant(self, test_T):
-        data_restaurants = pd.read_csv(file_path_restaurant)
-        filtered_df = data_restaurants
-        criteria = self.preference
-        # Loop through each criterion and apply the filter
-        for key, value in criteria.items():
-            if value == "any":
-                continue
-            filtered_df = filtered_df[filtered_df[key] == value]
 
-        # Check if there are any matching restaurants
-        if not filtered_df.empty:
-            # Return the name of the first matching restaurant
-            return filtered_df.iloc[0]
-        else:
-            return None
 
     def dialog_system(self):
         current_state = "Welcome"
