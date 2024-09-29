@@ -181,25 +181,39 @@ class State_Helpers:
 
 
 
-    def confirm(type_of_preference, content):
-        rest_of_sentence = ""
+    def confirm(state):
+        if len(state.user_preferences) != 3:
+            raise ValueError("User_preferences doesn't have 3 keys: \n ", state.user_preferences)
+        
+        food = state.user_preferences["food"]
+        area = state.user_preferences["area"]
+        pricerange = state.user_preferences["pricerange"]
 
-        if type_of_preference == "food":
-            return "You are looking for a ", type_of_preference, " restaurant, right?"
+        vowels = "aeiou"
 
-        elif type_of_preference == "pricerange":
-            if content == "dontcare":
-                rest_of_sentence == "and you don't care about the price range, "
-            else:
-                rest_of_sentence == "in the ", content, " price range, "
+        # Preferred food type
+        if food == "any":
+            food_text = "any"
+        else:
+            article = "an" if food[0] in vowels else "a"
+            food_text = f"{article} {food}"
 
-        # elif type_of_preference == "area":
+        # Preferred area
+        if area == "any":
+            area_text = "any area" 
+        else:
+            area_text = f"the {area} of town"
+        
+        # Preferred price range
+        if pricerange == "any":
+            pricerange_text = "and you don't care about the price range"
+        else:
+            pricerange_text = f"in the {pricerange} price range"
+        
 
-        return (
-            "Let me confirm, you are looking for a restaurant ",
-            rest_of_sentence,
-            "right?",
-        )
+        sentence = f"Let me confirm, you are looking for {food_text} restaurant in {area_text} {pricerange}, right?"
+
+        return sentence
 
     def extract_preferences(self, states, user_input):
         # Keyword matching: Check if there is a preference expressed in the user input
