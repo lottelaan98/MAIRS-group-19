@@ -13,7 +13,7 @@ from sklearn.metrics import classification_report, accuracy_score
 import Levenshtein
 from sklearn.feature_extraction.text import TfidfVectorizer
 import joblib
-from StateTransitions import States
+from StateTransitions import State
 
 
 ##################################################################################################################
@@ -93,7 +93,7 @@ class SystemDialog:
         self.vectorizer = (
             self.random_forest.vectorizer
         )  # Access vectorizer after initialization
-        self.state = States()
+        self.state = State()
         self.turn_index = 0
         
 
@@ -123,7 +123,7 @@ class SystemDialog:
         )[0]
 
         # Beredeneer met de predicted class wat de nieuwe state wordt en de system utterance
-        system_utterance = States.Welcome(predicted_class)
+        system_utterance = State.Welcome(predicted_class)
 
         # output = requalts(food=european) | inform(=dont care) | inform(type=restaurant) | request(add, phone)
         return ""
