@@ -472,7 +472,10 @@ class Dialog_Acts:
 
     def negate(self, state, user_input) -> str:
         system_utterance = state.last_system_utterance
-        if state.current_state == "AskForConfirmation":
+        if (
+            state.current_state == "AskForConfirmation"
+            or state.current_state == "AskForMissingInfo"
+        ):
             previous_preferences = state.user_preferences
             Helpers.extract_preferences(state, user_input, True)
             if previous_preferences == state.user_preferences:

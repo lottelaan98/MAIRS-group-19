@@ -89,7 +89,7 @@ class SystemDialog:
             user_input = input("Me: ").lower()
 
             predicted_class = self.classify_user_input(user_input)
-            print("PREDICTED CLASS = ", predicted_class)
+            # print("PREDICTED CLASS = ", predicted_class)
 
             system_utterance = self.perform_dialog_act(predicted_class, user_input)
             self.state.last_system_utterance = system_utterance
