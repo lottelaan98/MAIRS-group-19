@@ -10,12 +10,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score
 
-# from RestaurantRecommendationSystem import file_path_dialog
 
-file_path_dialog = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
-
-
-def load_data() -> pd.DataFrame:
+def load_data(file_path_dialog) -> pd.DataFrame:
     # Location of the the data file. CHANGE THIS ACCORDING TO THE PATH ON YOUR OWN COMPUTER
     file_path = file_path_dialog
 

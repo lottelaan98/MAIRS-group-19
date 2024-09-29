@@ -1,30 +1,12 @@
-# Restaurant recommendation system
 import pandas as pd
-from Baseline1 import Baseline1
-from Baseline2 import Baseline2
-from RestaurantRecommendationSystem import SystemDialog
-from SVM import SVM
-from RandomForest import RandomForest
-from RestaurantRecommendationClassification import load_data
-from collections import Counter
-from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, accuracy_score
 import Levenshtein
 import random
-from sklearn.feature_extraction.text import TfidfVectorizer
-import joblib
-
 
 ##################################################################################################################
 #############################        CHANGE THE PATH TO MATCH YOUR COMPUTER           #############################
 ##################################################################################################################
 
-
 file_path_restaurant = "C:\\Users\\toube\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\restaurant_info.csv"
-
-file_path_dialog = "C:\\Users\\toube\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
 
 
 # This dictionary contains as keys all the possible dialog states. The values of these keys are the possible subsequent states.
@@ -127,7 +109,8 @@ keywords = {
     }
 
 class Helpers:
-    def find_restaurant(self, state) -> str:
+    @staticmethod
+    def find_restaurant(state) -> str:
         """
         Looks for restaurants that match the user preferences.
         If there is a restaurant found, move to GiveRestaurantRecommendation and return a string with the recommendation.
@@ -163,11 +146,12 @@ class Helpers:
             state.currently_selected_restaurant = state.found_restaurants[0]
             found_restaurant = state.currently_selected_restaurant
             state.current_state = "GiveRestaurantRecommendation"
-            return self.sell_restaurant(found_restaurant)
+            return Helpers.sell_restaurant(found_restaurant)
         else:
             state.current_state = "InformThatThereIsNoRestaurant"
             return "Sorry, I couldn't find a restaurant that matches your preferences. Can you change your requirements?"
 
+    @staticmethod
     def ask_for_missing_info(state) -> str:
         """
         State becomes/stays AskForMissingInfo. 
@@ -185,11 +169,13 @@ class Helpers:
             "Something went wrong in ask_for_missing info. Still_needed_info = ",
             state.still_needed_info,
         )
-        
+    
+    @staticmethod
     def sell_restaurant(found_restaurant):
         return f"I recommend {found_restaurant.name} in the {found_restaurant.area} area, 
                 serving {found_restaurant.food} cuisine, with {found_restaurant.pricerange} prices."
 
+    @staticmethod   
     def ask_for_confirmation(state):
         state.current_state = "AskForConfirmation"
         if len(state.user_preferences) != 3:
@@ -225,6 +211,7 @@ class Helpers:
 
         return sentence
 
+    @staticmethod
     def extract_preferences(self, state, user_input, overwrite):
         # Keyword matching: Check if there is a preference expressed in the user input
         for key, words in self.keywords.items():
@@ -266,6 +253,7 @@ class Helpers:
                 state.user_preferences[key] = word
                 state.still_needed_info.remove(key)   
 
+    @staticmethod
     def perform_levenshtein(self, state, user_input):
         print("now in Levenshtein")
         for key, words in self.keywords.items():
@@ -276,7 +264,8 @@ class Helpers:
                 ):
                     return (key, word)
         return None
-                    
+
+    @staticmethod          
     def ask_user_for_clarification(state):
         """
         """
@@ -284,6 +273,7 @@ class Helpers:
         possible_values = state.ambiguity[key]
         return f"For the {key} preference, would you like {possible_values[0]} or {possible_values[1]}?"
     
+    @staticmethod    
     def fix_ambiguity(state, user_input):
         """
         Checks the user_input to see which value for a specific preference (key) the user chooses.
@@ -302,8 +292,6 @@ class Helpers:
     @staticmethod
     def provide_contact_info(restaurant):
         return f"The restaurant {restaurant.name} is on {restaurant.address} with post code {restaurant.postcode}. This is their phone number: {restaurant.phone}"
-    
-   
     
    
 
@@ -436,7 +424,6 @@ class Dialog_Acts:
             else:
                 system_utterance = Helpers.ask_for_confirmation(state)
         return system_utterance
-
     
     def null(self, state, user_input):
         system_utterance = state.last_system_utterance
