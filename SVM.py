@@ -1,159 +1,72 @@
-import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 
-
-class SVM:
+class SVMClassifier:
     """
-    Support Vector Machine classifies utterances based on the most common class
+    Support Vector Machine classifier for dialog act classification.
     """
 
     def __init__(self, dataset):
-        self.dataset = dataset
-        self.dataset_without_duplicates = self.dataset.drop_duplicates()
+        self.original_dataset = dataset
+        self.dataset_without_duplicates = self.original_dataset.drop_duplicates(subset=['utterance content'])
+        self.svm_classifier = None
+        self.vectorizer = TfidfVectorizer(max_features=500)
 
-    def vectorize(self, dataset, vectorizer=None):
-        if vectorizer is None:
-            vectorizer = TfidfVectorizer()
-            X = vectorizer.fit_transform(dataset["utterance content"])
-        else:
-            X = vectorizer.transform(dataset["utterance content"])
-        y = dataset["dialog act"]
-        return X, y, vectorizer
+    def find_x_and_y(self, dataset):
+        x = self.vectorizer.fit_transform(dataset['utterance content'])
+        y = dataset['dialog act']
+        return x, y
 
-    def split_data(self, x, y):
-        x_train, x_test, y_train, y_test = train_test_split(
-            x, y, test_size=0.15, random_state=42
-        )
-        return x_train, x_test, y_train, y_test
-
-    def fit_svm(self, x_train, y_train):
-        svm = SVC()
-        svm.fit(x_train, y_train)
-        return svm
-
-    def make_prediction(self, x_test, svm):
-        y_pred = svm.predict(x_test)
-        return y_pred
+    def train_and_test(self, x, y):
+        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.15, random_state=42)
+        self.svm_classifier = SVC()
+        self.svm_classifier.fit(x_train, y_train)
+        y_pred = self.svm_classifier.predict(x_test)
+        return y_test, y_pred
 
     def report(self, y_test, y_pred):
-        report = classification_report(y_test, y_pred)
-        return report
-
-    def print_wrong_predictions(self, y_test, y_pred, dialog_act=None):
-        # Convert y_test to an array (if it's a pandas Series)
-        y_test = y_test.values if hasattr(y_test, "values") else y_test
-
-        # Iterate through predictions and compare them with true labels
-        for i in range(len(y_test)):
-            if y_test[i] != y_pred[i]:
-                # Check if dialog_act filter is provided, and if the true label matches the filter
-                if dialog_act is None or y_test[i] == dialog_act:
-                    # Find the original row in the dataset using the index of x_test
-                    original_row = self.dataset.iloc[i]
-
-                    # Print the relevant row along with true and predicted labels
-                    print(
-                        f"Index {i}: Original utterance: {original_row['utterance content']}"
-                    )
-                    print(f"True label = {y_test[i]}, Predicted label = {y_pred[i]}")
-                    print("-" * 80)
+        return classification_report(y_test, y_pred)
 
     def difficult_cases(self):
         keywords = {
             "ack": [
-                "alright",
-                "nice",
-                "looking forward",
-                "looking forward to it",
-                "perfect",
-                "excellent",
-                "splendid",
-                "very good",
-                "couldn't be better",
-                "can't be better",
-                "great",
-                "that's great",
-                "wonderful",
-                "fantastic",
-                "awesome",
-                "brilliant",
+                "alright", "nice", "looking forward", "looking forward to it", "perfect",
+                "excellent", "splendid", "very good", "couldn't be better", "can't be better",
+                "great", "that's great", "wonderful", "fantastic", "awesome", "brilliant"
             ],
             "confirm": [
-                "and the address",
-                "and the location",
-                "and the food type",
-                "and the cuisine",
-                "and the area",
-                "and the pricerange",
-                "and the reservation details",
-                "and the date",
-                "and the parking possibilities",
-                "and the payment method",
+                "and the address", "and the location", "and the food type", "and the cuisine",
+                "and the area", "and the pricerange", "and the reservation details", "and the date",
+                "and the parking possibilities", "and the payment method"
             ],
             "repeat": [
-                "sorry",
-                "repeat that please",
-                "could you repeat",
-                "can you repeat",
-                "could you repeat that please",
-                "previous",
-                "previous please",
-                "can repeat",
-                "try again",
-                "pardon",
-                "excuse me",
-                "i missed that",
-                "one more time",
-                "one more time please",
-                "say that again",
-                "repeat it please",
-                "i didn't catch that",
-                "i did not catch that",
-                "rewind",
-                "rewind that please",
-                "go over that again",
-                "can you go over that once more",
-                "what did you say",
-                "i missed what you said",
-                "could you reiterate",
-                "please go over that again",
-                "can you clarify",
-                "would you mind repeating",
-            ],
+                "sorry", "repeat that please", "could you repeat", "can you repeat", 
+                "previous", "previous please", "try again", "pardon", "i missed that",
+                "one more time", "say that again", "i didn't catch that", "rewind", 
+                "go over that again", "what did you say", "please go over that again", 
+                "can you clarify", "would you mind repeating"
+            ]
         }
 
-        data = [
-            (key, phrase) for key, phrases in keywords.items() for phrase in phrases
-        ]
-
+        data = [(key, phrase) for key, phrases in keywords.items() for phrase in phrases]
         df = pd.DataFrame(data, columns=["dialog act", "utterance content"])
         return df
 
     def perform_svm(self):
-        x, y = self.vectorize(self.dataset)
-        x_train, x_test, y_train, y_test = self.split_data(x, y)
-        fitted_svm = self.fit_svm(x_train, y_train)
-        y_pred = self.make_prediction(x_test, fitted_svm)
-        # Create a report of the results
+        x, y = self.find_x_and_y(self.dataset_without_duplicates)
+        y_test, y_pred = self.train_and_test(x, y)
         class_report = self.report(y_test, y_pred)
         print(class_report)
 
     def perform_svm_difficult(self):
-        # load the vectorized version of the difficult cases
         df = self.difficult_cases()
-        # vectorize the dialog-acts dataset and the difficult instances dataset
-        x, y, vectorizer = self.vectorize(self.dataset)
-        x_vec_diff, y_vec_diff, _ = self.vectorize(df, vectorizer=vectorizer)
-        # split the original dataset
-        x_train, _, y_train, _ = self.split_data(x, y)
-        # fit the svm on the train dataset
-        fitted_svm = self.fit_svm(x_train, y_train)
-        # prediction
-        y_pred = self.make_prediction(x_vec_diff, fitted_svm)
-        # Create a report of the results
+        x, y = self.find_x_and_y(self.dataset_without_duplicates)
+        x_vec_diff, y_vec_diff = self.find_x_and_y(df)
+        x_train, _, y_train, _ = train_test_split(x, y, test_size=0.15, random_state=42)
+        self.svm_classifier.fit(x_train, y_train)
+        y_pred = self.svm_classifier.predict(x_vec_diff)
         class_report = self.report(y_vec_diff, y_pred)
         print(class_report)
