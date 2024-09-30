@@ -19,3 +19,13 @@ class Baseline1:
 
     def classify(self):
         return self.most_frequent_class
+
+    def find_x_and_y(self, dataset):
+        x = self.vectorizer.fit_transform(dataset['utterance content'])  
+        y = dataset['dialog act']  
+        return x, y
+    
+    def train_and_test(self, x, y):
+        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.15, random_state=42)
+        y_pred = [self.most_frequent_class] * len(y_test)  # All predictions are the most common class
+        return y_test, y_pred
