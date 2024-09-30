@@ -22,7 +22,8 @@ dialog_state_dictionary = {
         "AskForConfirmation",
     },
     "AskUserForClarification": {
-        "AskForMissingInfo" "AskUserForClarification",
+        "AskForMissingInfo",
+        "AskUserForClarification",
         "AskForConfirmation",
     },
     "AskForConfirmation": {
@@ -38,14 +39,13 @@ dialog_state_dictionary = {
         "AskForConfirmation",
         "InformThatThereIsNoRestaurant",
         "GiveRestaurantRecommendation",
-        "ProvideAlternativeSuggestion",
     },
     "GiveRestaurantRecommendation": {
-        "AnswerAdditionalQuestion",
+        "GiveRestaurantRecommendation",
         "ProvideContactInformation",
     },
     "ProvideContactInformation": {
-        "AnswerAdditionalQuestion",
+        "ProvideContactInformation",
         "End",
     },
     "End": {},
