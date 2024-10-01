@@ -2,14 +2,20 @@
 from RandomForest import RandomForest
 from RestaurantRecommendationClassification import Classification
 import StateTransitions
+import nltk
+from nltk.corpus import words
+import Levenshtein
+from StateTransitions import keywords
+import difflib
+
+# Download the words dataset if not already available
+# nltk.download("words")
 
 ##################################################################################################################
 #############################        CHANGE THE PATH TO MATCH YOUR COMPUTER           #############################
 ##################################################################################################################
 
-file_path_dialog = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
-
-
+file_path_dialog = "/Users/youssefbenmansour/Downloads/dialog_acts.dat"
 class SystemDialog:
     def __init__(self):
         self.classification = Classification(file_path_dialog)
@@ -31,8 +37,86 @@ class SystemDialog:
         random_forest.perform_random_forest()
 
         return random_forest
+    
+    def get_preference_second(user_input):
+        keys = ['touristic', 'romantic', 'children', 'assignedseats']
+        result = {key: 'any' for key in keys}
+        user_input = user_input.lower()
+
+        keywords_2 = {
+            'touristic':     ['touristic'],
+            'romantic':      ['romantic'],
+            'children':      ['children'],
+            'assignedseats': ['assigned seats', 'reservation']
+        }
+    
+        negations = ["no", "not", "don't", "do not", "without", "none"]
+
+        input_words = user_input.split()
+        for key, words in keywords_2.items():
+            for word in words:
+                if word in user_input:
+                    word_idx = user_input.find(word)
+                    negated = any(neg in user_input[:word_idx] for neg in negations)
+                
+                    if negated:
+                        result[key] = f'not {word}'
+                    else:
+                        result[key] = word
+                    break 
+        for key, value in result.items():
+            if value == 'any':
+                for word in keywords_2[key]:
+                    matches = difflib.get_close_matches(word, input_words, cutoff=0.8)
+                    if matches:
+                        result[key] = word
+                        break
+
+        if result['assignedseats'] in ['assigned seats', 'reservation']:
+            result['assignedseats'] = 0
+        return result
+
+    def apply_rules(possible_restaurant, user_input):
+        print(user_input)
+        if user_input['touristic'] == 'touristic': 
+            possible_restaurant = possible_restaurant[(possible_restaurant['pricerange'] == 'cheap') & (possible_restaurant['food_quality'] != 'normal') & (possible_restaurant['food'] != 'roumanian')]
+        if user_input['touristic'] != 'touristic': 
+            possible_restaurant = possible_restaurant[~((possible_restaurant['pricerange'] == 'cheap') & (possible_restaurant['food_quality'].isin(['good', 'excellent'])))]
+        if user_input['assignedseats'] == 'assigned seats':
+            possible_restaurant = possible_restaurant[(possible_restaurant['crowdedness']== 'busy')]
+        if user_input['children'] == 'children':
+            possible_restaurant = possible_restaurant[(possible_restaurant['length_of_stay'] != 'long')]
+        if user_input['romantic'] == 'romantic':
+            possible_restaurant = possible_restaurant[(possible_restaurant['crowdedness'] != 'busy') & (possible_restaurant['length_of_stay']== 'long')]
+        return possible_restaurant
 
     def classify_user_input(self, user_input) -> str:
+        
+        def correct_sentence(sentence):
+            corrected_sentence = []
+            words = sentence.split()  # Split sentence into words
+
+    # Iterate over each word in the sentence
+            for word in words:
+                corrected_word = word
+                min_overall_distance = 2
+
+        # Check the word against all categories
+                for category in keywords:
+                    for keyword in keywords[category]:
+                # Compute Levenshtein distance between word and keyword
+                        distance = Levenshtein.distance(word, keyword)
+                
+                # If a closer match is found, update the corrected word
+                        if distance < min_overall_distance:
+                            min_overall_distance = distance
+                            corrected_word = keyword
+
+                corrected_sentence.append(corrected_word)
+
+            return " ".join(corrected_sentence)
+        
+        user_input = correct_sentence(user_input)
         """
         Input is a user utterance. Output is the predicted dialog act (i.e. class) of this user utterance.
         """
@@ -41,7 +125,6 @@ class SystemDialog:
         predicted_class: str = self.random_forest.rf_classifier.predict(
             preprocessed_input
         )[0]
-
         return predicted_class
 
     def perform_dialog_act(self, predicted_class, user_input):
@@ -55,7 +138,6 @@ class SystemDialog:
             return self.acts.confirm(self.state, user_input)
         elif predicted_class == "deny":
             return self.acts.deny(self.state, user_input)
-
         elif predicted_class == "hello":
             return self.acts.hello(self.state)
         elif predicted_class == "inform":
@@ -66,7 +148,6 @@ class SystemDialog:
             return self.acts.null(self.state, user_input)
         elif predicted_class == "repeat":
             return self.acts.repeat(self.state)
-
         elif predicted_class == "reqalts":
             return self.acts.reqalts(self.state, user_input)
         elif predicted_class == "reqmore":
