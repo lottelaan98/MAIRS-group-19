@@ -2,8 +2,6 @@
 from RandomForest import RandomForest
 from RestaurantRecommendationClassification import Classification
 import StateTransitions
-import nltk
-from nltk.corpus import words
 import Levenshtein
 from StateTransitions import keywords
 import difflib
@@ -16,6 +14,8 @@ import difflib
 ##################################################################################################################
 
 file_path_dialog = "/Users/youssefbenmansour/Downloads/dialog_acts.dat"
+
+
 class SystemDialog:
     def __init__(self):
         self.classification = Classification(file_path_dialog)
@@ -37,19 +37,19 @@ class SystemDialog:
         random_forest.perform_random_forest()
 
         return random_forest
-    
+
     def get_preference_second(user_input):
-        keys = ['touristic', 'romantic', 'children', 'assignedseats']
-        result = {key: 'any' for key in keys}
+        keys = ["touristic", "romantic", "children", "assignedseats"]
+        result = {key: "any" for key in keys}
         user_input = user_input.lower()
 
         keywords_2 = {
-            'touristic':     ['touristic'],
-            'romantic':      ['romantic'],
-            'children':      ['children'],
-            'assignedseats': ['assigned seats', 'reservation']
+            "touristic": ["touristic"],
+            "romantic": ["romantic"],
+            "children": ["children"],
+            "assignedseats": ["assigned seats", "reservation"],
         }
-    
+
         negations = ["no", "not", "don't", "do not", "without", "none"]
 
         input_words = user_input.split()
@@ -58,44 +58,42 @@ class SystemDialog:
                 if word in user_input:
                     word_idx = user_input.find(word)
                     negated = any(neg in user_input[:word_idx] for neg in negations)
-                
+
                     if negated:
-                        result[key] = f'not {word}'
+                        result[key] = f"not {word}"
                     else:
                         result[key] = word
-                    break 
+                    break
         for key, value in result.items():
-            if value == 'any':
+            if value == "any":
                 for word in keywords_2[key]:
                     matches = difflib.get_close_matches(word, input_words, cutoff=0.8)
                     if matches:
                         result[key] = word
                         break
 
-        if result['assignedseats'] in ['assigned seats', 'reservation']:
-            result['assignedseats'] = 0
+        if result["assignedseats"] in ["assigned seats", "reservation"]:
+            result["assignedseats"] = 0
         return result
 
-    
-
     def classify_user_input(self, user_input) -> str:
-        
+
         def correct_sentence(sentence):
             corrected_sentence = []
             words = sentence.split()  # Split sentence into words
 
-    # Iterate over each word in the sentence
+            # Iterate over each word in the sentence
             for word in words:
                 corrected_word = word
                 min_overall_distance = 2
 
-        # Check the word against all categories
+                # Check the word against all categories
                 for category in keywords:
                     for keyword in keywords[category]:
-                # Compute Levenshtein distance between word and keyword
+                        # Compute Levenshtein distance between word and keyword
                         distance = Levenshtein.distance(word, keyword)
-                
-                # If a closer match is found, update the corrected word
+
+                        # If a closer match is found, update the corrected word
                         if distance < min_overall_distance:
                             min_overall_distance = distance
                             corrected_word = keyword
@@ -103,7 +101,7 @@ class SystemDialog:
                 corrected_sentence.append(corrected_word)
 
             return " ".join(corrected_sentence)
-        
+
         user_input = correct_sentence(user_input)
         """
         Input is a user utterance. Output is the predicted dialog act (i.e. class) of this user utterance.
