@@ -76,19 +76,7 @@ class SystemDialog:
             result['assignedseats'] = 0
         return result
 
-    def apply_rules(possible_restaurant, user_input):
-        print(user_input)
-        if user_input['touristic'] == 'touristic': 
-            possible_restaurant = possible_restaurant[(possible_restaurant['pricerange'] == 'cheap') & (possible_restaurant['food_quality'] != 'normal') & (possible_restaurant['food'] != 'roumanian')]
-        if user_input['touristic'] != 'touristic': 
-            possible_restaurant = possible_restaurant[~((possible_restaurant['pricerange'] == 'cheap') & (possible_restaurant['food_quality'].isin(['good', 'excellent'])))]
-        if user_input['assignedseats'] == 'assigned seats':
-            possible_restaurant = possible_restaurant[(possible_restaurant['crowdedness']== 'busy')]
-        if user_input['children'] == 'children':
-            possible_restaurant = possible_restaurant[(possible_restaurant['length_of_stay'] != 'long')]
-        if user_input['romantic'] == 'romantic':
-            possible_restaurant = possible_restaurant[(possible_restaurant['crowdedness'] != 'busy') & (possible_restaurant['length_of_stay']== 'long')]
-        return possible_restaurant
+    
 
     def classify_user_input(self, user_input) -> str:
         
