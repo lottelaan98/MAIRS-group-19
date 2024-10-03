@@ -116,6 +116,7 @@ class SystemDialog:
         return predicted_class
 
     def perform_dialog_act(self, predicted_class, user_input):
+        print(predicted_class)
         if predicted_class == "ack":
             return self.acts.ack(self.state)
         elif predicted_class == "affirm":

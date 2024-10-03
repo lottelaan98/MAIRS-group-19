@@ -235,7 +235,7 @@ class Helpers:
         state.current_state = "AskForMissingInfo2"
 
         print(state.secondary_preference)
-        if all(value == 'any' for value in state.secondary_preference.values()):
+        if all(value == '' for value in state.secondary_preference.values()):
             return "Are there any additional preferences you'd like to specify such as romantic atmosphere, requiring a reservation, or being child-friendly?"
         
 
@@ -487,6 +487,7 @@ class Dialog_Acts:
 
     def affirm(self, state):
         system_utterance = state.last_system_utterance
+        print(state.current_state)
         if state.current_state == "AskForConfirmation1":
             system_utterance = Helpers.ask_for_missing_info2(state)
         elif state.current_state == "AskForConfirmation2":
@@ -589,29 +590,29 @@ class Dialog_Acts:
         Return system utterance
         """
         # First extract preferences from the dialog_act. If something is ambigu, it moves into the AskUserForClarification state.
-        def inform1():
-            Helpers.extract_preferences(
-            state,
-            user_input,
-            (
-                state.current_state == "InformThatThereIsNoRestaurant"
-                or state.current_state == "Welcome"
-            ),
-                )
-            # First fix the ambiguity of the user input
-            if state.ambiguity != {}:
-                state.current_state = "AskUserForClarification"
-                system_utterance = Helpers.ask_user_for_clarification(state)
+    
+        Helpers.extract_preferences(
+        state,
+        user_input,
+        (
+            state.current_state == "InformThatThereIsNoRestaurant"
+            or state.current_state == "Welcome"
+        ),
+            )
+        # First fix the ambiguity of the user input
+        if state.ambiguity != {}:
+            state.current_state = "AskUserForClarification"
+            system_utterance = Helpers.ask_user_for_clarification(state)
 
-            # Find a system utterance based on the preferences that are still missing
-            if state.still_needed_info:
-                # System moves to state AskForMissingInfo
-                system_utterance = Helpers.ask_for_missing_info1(state)
-            else:
-                # System moves to state AskForConfirmation
-                system_utterance = Helpers.ask_for_confirmation1(state)
+        # Find a system utterance based on the preferences that are still missing
+        if state.still_needed_info:
+            # System moves to state AskForMissingInfo
+            system_utterance = Helpers.ask_for_missing_info1(state)
+        else:
+            # System moves to state AskForConfirmation
+            system_utterance = Helpers.ask_for_confirmation1(state)
 
-            return system_utterance
+        return system_utterance
         def inform2():
             Helpers.extract_second_preferences(
             state,
@@ -666,6 +667,10 @@ class Dialog_Acts:
     
     def null(self, state, user_input):
         system_utterance = state.last_system_utterance
+
+        if state.current_state== "AskForMissingInfo2":
+           return Helpers.find_restaurant(state)
+
         if state.current_state == "Welcome":
             # System moves to State AskForMissingInfo
             system_utterance = Helpers.ask_for_missing_info1(state)
