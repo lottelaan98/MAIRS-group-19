@@ -15,7 +15,12 @@ import difflib
 #############################        CHANGE THE PATH TO MATCH YOUR COMPUTER           #############################
 ##################################################################################################################
 
-file_path_dialog = "/Users/youssefbenmansour/Downloads/dialog_acts.dat"
+
+file_path_restaurant = 'C:\\Users\\Matsb\\OneDrive\\Documents\\Python Scripts\\MAIRS-group-19\\restaurant_info.csv'
+
+file_path_dialog = "C:\\Users\\Matsb\\OneDrive\\Documents\\Python Scripts\\MAIRS-group-19\\dialog_acts.dat"
+
+
 class SystemDialog:
     def __init__(self):
         self.classification = Classification(file_path_dialog)

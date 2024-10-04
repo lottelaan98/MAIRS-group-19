@@ -10,6 +10,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, accuracy_score
 
+file_path_dialog = "C:\\Users\\Matsb\\OneDrive\\Documents\\Python Scripts\\MAIRS-group-19\\dialog_acts.dat"
 
 class Classification:
     def __init__(self, file_path_dialog):
@@ -54,7 +55,7 @@ class Classification:
 
 
 # perform_classifications()
-# classification = Classification()
-# df = classification.load_data()
-# svm = SVM(df)
-# svm.perform_svm_difficult()
+classification = Classification("C:\\Users\\Matsb\\OneDrive\\Documents\\Python Scripts\\MAIRS-group-19\\dialog_acts.dat")
+df = classification.load_data()
+svm = SVM(df)
+svm.perform_svm_difficult(5)
