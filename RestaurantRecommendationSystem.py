@@ -89,40 +89,7 @@ class SystemDialog:
             result["assignedseats"] = 0
         return result
 
-    def apply_rules(possible_restaurant, user_input):
-        print(user_input)
-        if user_input["touristic"] == "touristic":
-            possible_restaurant = possible_restaurant[
-                (possible_restaurant["pricerange"] == "cheap")
-                & (possible_restaurant["food_quality"] != "normal")
-                & (possible_restaurant["food"] != "roumanian")
-            ]
-        if user_input["touristic"] != "touristic":
-            possible_restaurant = possible_restaurant[
-                ~(
-                    (possible_restaurant["pricerange"] == "cheap")
-                    & (possible_restaurant["food_quality"].isin(["good", "excellent"]))
-                )
-            ]
-        if user_input["assignedseats"] == "assigned seats":
-            possible_restaurant = possible_restaurant[
-                (possible_restaurant["crowdedness"] == "busy")
-            ]
-        if user_input["children"] == "children":
-            possible_restaurant = possible_restaurant[
-                (possible_restaurant["length_of_stay"] != "long")
-            ]
-        if user_input["romantic"] == "romantic":
-            possible_restaurant = possible_restaurant[
-                (possible_restaurant["crowdedness"] != "busy")
-                & (possible_restaurant["length_of_stay"] == "long")
-            ]
-        return possible_restaurant
-
     def classify_user_input(self, user_input) -> str:
-        """
-        Input is a user utterance. Output is the predicted dialog act (i.e. class) of this user utterance.
-        """
 
         def correct_sentence(sentence):
             corrected_sentence = []
@@ -140,7 +107,7 @@ class SystemDialog:
                         distance = Levenshtein.distance(word, keyword)
 
                         # If a closer match is found, update the corrected word
-                        if distance <= min_overall_distance:
+                        if distance < min_overall_distance:
                             min_overall_distance = distance
                             corrected_word = keyword
 
@@ -148,6 +115,10 @@ class SystemDialog:
 
             return " ".join(corrected_sentence)
 
+        user_input = correct_sentence(user_input)
+        """
+        Input is a user utterance. Output is the predicted dialog act (i.e. class) of this user utterance.
+        """
         # Transform input to match the trained model
         preprocessed_input = self.vectorizer.transform([user_input.lower()])
         predicted_class: str = self.random_forest.rf_classifier.predict(
@@ -169,6 +140,7 @@ class SystemDialog:
         return predicted_class
 
     def perform_dialog_act(self, predicted_class, user_input):
+        print(predicted_class)
         if predicted_class == "ack":
             return self.acts.ack(self.state)
         elif predicted_class == "affirm":
