@@ -11,7 +11,7 @@ import difflib
 keywords_2 = {
     "touristic": ["touristic"],
     "romantic": ["romantic"],
-    "children": ["children"],
+    "children": ["children", "child", "friendly"],
     "assignedseats": ["assigned seats", "reservation"],
 }
 
@@ -91,14 +91,37 @@ class Restaurant:
 class Helpers:
 
     @staticmethod
-    def find_restaurants(state) -> str:
+    def communicate_found_restaurant(state) -> str:
+        # First find the restaurants based on the user preferences
+        Helpers.find_restaurants1(state)
+
+        # Then filter these found restaurants based on the additional requirements
+        state.filtered_restaurants = Helpers.apply_rules(
+            state.found_restaurants, state.additional_requirements
+        )
+
+        # If no restaurant is found:
+        if len(state.found_restaurants) == 0:
+            state.current_state = "InformThatThereIsNoRestaurant"
+            return Helpers.tell_no_restaurant_found(state)
+
+        # Select a restaurant and give this recommendation to the user
+        state.currently_selected_restaurant = state.found_restaurants[0]
+        state.found_restaurant = state.currently_selected_restaurant
+        state.current_state = "GiveRestaurantRecommendation"
+        return Helpers.sell_restaurant(state)
+
+    @staticmethod
+    def find_restaurants1(state):
         """
         Looks for restaurants that match the user preferences.
+        It only filters on the user_preferences. NOT ON ADDITIONAL REQUIREMENTS.
+        Does not return anything. Only changes state.found_restaurants1
+
         If there is a restaurant found, move to GiveRestaurantRecommendation and return a string with the recommendation.
         If not found, move to InformThatThereIsNoRestaurant and return string that asks user to change requirements.
         """
         state.found_restaurants = []
-        input_list = []
         # Look in the CSV to find for any restaurants that may meet the criteria
         data_restaurants = pd.read_csv(state.file_path_restaurants, sep=";")
         filtered_df = data_restaurants
@@ -125,23 +148,6 @@ class Helpers:
                     length_of_stay=row["length_of_stay"],
                 )
                 state.found_restaurants.append(restaurant)
-
-            state.found_restaurants = Helpers.apply_rules(
-                state.found_restaurants, state.additional_requirements
-            )
-
-            # If no restaurant is found:
-            if len(state.found_restaurants) == 0:
-                state.current_state = "InformThatThereIsNoRestaurant"
-                return Helpers.tell_no_restaurant_found(state)
-
-            # Select a restaurant and give this recommendation to the user
-            state.currently_selected_restaurant = state.found_restaurants[0]
-            found_restaurant = state.currently_selected_restaurant
-            state.current_state = "GiveRestaurantRecommendation"
-            return Helpers.sell_restaurant(found_restaurant)
-
-        return Helpers.tell_no_restaurant_found(state)
 
     @staticmethod
     def apply_rules(
@@ -224,7 +230,7 @@ class Helpers:
         State becomes/stays AskForMissingInfo.
         Returns the system utterance where it asks for the next preference that is still missing.
         """
-        state.current_state = "AskForMissingInfo2"
+        state.current_state = "AskForAdditionalRequirements"
         if all(value == "" for value in state.additional_requirements.values()):
             return "Are there any additional preferences you'd like to specify such as romantic atmosphere, requiring a reservation, or being child-friendly?"
 
@@ -256,13 +262,50 @@ class Helpers:
         return f"""Sorry, I couldn't find a {price_string} {food_string} restaurant {area_string}. Please change your requirements."""
 
     @staticmethod
-    def sell_restaurant(found_restaurant):
+    def sell_restaurant(state):
         """
         Returns a system utterance where the found restaurant is recommended.
         For example:
         I recommend cotto in the centre, serving british cuisine, with moderate prices. Let me know if you need the post code, address or phone number.
         """
-        return f"""I recommend {found_restaurant.name} in the {found_restaurant.area} area, serving {found_restaurant.food} cuisine, with {found_restaurant.pricerange} prices. Let me know if you need the post code, address or phone number."""
+
+        def create_second_part():
+            string = ""
+
+            for _, value in state.additional_requirements.items():
+                if value != "":
+                    if value == "children":
+                        string = (
+                            string
+                            + "This restaurant is child-friendly because you are served quickly. "
+                        )
+                    elif value == "touristic":
+                        string = (
+                            string
+                            + "It is a touristic hot-spot due to the cheap prices and the good food. "
+                        )
+                    elif value == "not touristic":
+                        string = (
+                            string
+                            + "This is not a touristic place, since the food quality is very average. "
+                        )
+                    elif value == "assigned seats":
+                        string = (
+                            string
+                            + "The waiter will assign you a seat, since it is a very busy restaurant. "
+                        )
+                    elif value == "romantic":
+                        string = (
+                            string
+                            + "The restaurant is romantic because it allows you to stay for a long time. "
+                        )
+            return string
+
+        first_part = f"""I recommend {state.found_restaurant.name} in the {state.found_restaurant.area} area, serving {state.found_restaurant.food} cuisine, with {state.found_restaurant.pricerange} prices."""
+        second_part = create_second_part()
+        third_part = "Let me know if you need the post code, address or phone number."
+
+        return first_part + second_part + third_part
 
     @staticmethod
     def ask_for_confirmation1(state):
@@ -352,10 +395,13 @@ class Helpers:
         else:
             return False
 
-    def extract_second_preferences(state, user_input):
+    def extract_additional_requirements(state, user_input):
+        """
+        Extract preferences (romantic, children, assignedseats, touristic) from user_input and put in state.additional_requirements
+        """
         keys = ["touristic", "romantic", "children", "assignedseats"]
         result = {key: "" for key in keys}
-        user_input = user_input.lower()
+        print("result now: ", result)
 
         negations = ["no", "not", "don't", "do not", "without", "none"]
 
@@ -381,11 +427,16 @@ class Helpers:
 
         if result["assignedseats"] in ["assigned seats", "reservation"]:
             result["assignedseats"] = 0
+
+        print("result after: ", result)
+
         state.additional_requirements = result
 
     @staticmethod
     def extract_preferences(state, user_input, overwrite):
-
+        """
+        Extract preferences (food, area, pricerange) from user_input and put in state.user_preferences
+        """
         preference_extracted = False
         # Keyword matching: Check if there is a preference expressed in the user input
         for key, words in keywords_1.items():
@@ -507,7 +558,7 @@ class Dialog_Acts:
         if state.current_state == "AskForConfirmation1":
             system_utterance = Helpers.ask_for_missing_info2(state)
         elif state.current_state == "AskForConfirmation2":
-            system_utterance = Helpers.find_restaurants(state)
+            system_utterance = Helpers.communicate_found_restaurant(state)
 
         elif state.current_state == "AskUserForClarification":
             # If the user confirmed the last system utterance
@@ -621,8 +672,8 @@ class Dialog_Acts:
             ),
         )
         print("preferences = ", state.user_preferences)
-        if state.current_state == "AskForMissingInfo2":
-            Helpers.extract_second_preferences(state, user_input)
+        if state.current_state == "AskForAdditionalRequirements":
+            Helpers.extract_additional_requirements(state, user_input)
 
         # First fix the ambiguity of the user input
         if state.ambiguity != {}:
@@ -633,7 +684,7 @@ class Dialog_Acts:
         if state.still_needed_info:
             # System moves to state AskForMissingInfo
             system_utterance = Helpers.ask_for_missing_info1(state)
-        elif state.current_state == "AskForMissingInfo2":
+        elif state.current_state == "AskForAdditionalRequirements":
 
             system_utterance = Helpers.ask_for_confirmation2(state)
         else:
@@ -643,40 +694,59 @@ class Dialog_Acts:
         return system_utterance
 
     def negate(self, state, user_input) -> str:
+        """
+        If the user negated the first confirmation, change the user preferences if he stated a new preference.
+        If he didn't state a preference, then start over with the user preferences.
+
+        If the user negated the question of the additional requirements, put 'any' in the additional requirements.
+
+        If the usesr negated the second confirmation, ask again.
+
+        """
         system_utterance = state.last_system_utterance
         if (
             state.current_state == "AskForConfirmation1"
             or state.current_state == "AskForMissingInfo1"
         ):
+            print("in negate: state = ", state.current_state)
             previous_preferences = state.user_preferences
             Helpers.extract_preferences(state, user_input, True)
+            # When the user didn't state what he wants to change, remove all preferences and ask again.
             if previous_preferences == state.user_preferences:
-                # When the user didn't state what he wants to change, remove all preferences and ask again.
                 state.user_preferences = {}
                 state.still_needed_info = ["area", "food", "pricerange"]
                 system_utterance = (
                     "I'm sorry. What is your preference for food, price range and area?"
                 )
+            # When the user did change what he want to change, this is in the user_preferences now and you can ask for confirmation.
             else:
                 system_utterance = Helpers.ask_for_confirmation1(state)
+        elif state.current_state == "AskForAdditionalRequirements":
+            # The user doesn't care about additional requirements.
+            Helpers.extract_additional_requirements(state, "any")
+            state.current_state = "AskForConfirmation2"
+            system_utterance = Helpers.ask_for_confirmation2(state)
+
         return system_utterance
 
     def null(self, state, user_input):
         system_utterance = state.last_system_utterance
 
         words = user_input.lower().split()
-        testt = False
-        # Loop through the keyword dictionary
-        for category, keywords in keywords_2.items():
-            # Check if any keyword from the dictionary is in the user's input
-            if any(keyword in words for keyword in keywords):
-                testt = True
-        if testt:
-            state.current_state = "AskForConfirmation2"
-            Helpers.extract_second_preferences(state, user_input)
-            return Helpers.ask_for_confirmation2(state)
-        if state.current_state == "AskForMissingInfo2":
-            return Helpers.find_restaurants(state)
+        if state.current_state == "AskForConfirmation2":
+            keyword_found = False
+            # Loop through the keyword dictionary
+            for _, keywords in keywords_2.items():
+                # Check if any keyword from the dictionary is in the user's input
+                if any(keyword in words for keyword in keywords):
+                    keyword_found = True
+            if keyword_found:
+                state.current_state = "AskForConfirmation2"
+                Helpers.extract_additional_requirements(state, user_input)
+                return Helpers.ask_for_confirmation2(state)
+
+        if state.current_state == "AskForAdditionalRequirements":
+            return Helpers.communicate_found_restaurant(state)
 
         if state.current_state == "Welcome":
             # System moves to State AskForMissingInfo
@@ -706,7 +776,7 @@ class Dialog_Acts:
             else:
                 system_utterance = Helpers.ask_user_for_clarification(state)
         else:
-            system_utterance = "I am sorry. Could you repeat that, please?"
+            system_utterance = "I am sorry. Could you please rephrase that?"
 
         return system_utterance
 
@@ -748,12 +818,12 @@ class Dialog_Acts:
         if detect_unlisted_keywords():
             print("Hellloo")
             state.found_restaurants = []
-            system_utterance = Helpers.find_restaurants(state)
+            system_utterance = Helpers.communicate_found_restaurant(state)
             print(system_utterance)
 
         elif state.current_state == "GiveRestaurantRecommendation":
             Helpers.extract_preferences(state, user_input, True)
-            Helpers.extract_second_preferences(state, user_input)
+            Helpers.extract_additional_requirements(state, user_input)
             # Remove the current found restaurant from the list
             del state.found_restaurants[0]
             # and provide another restaurant
@@ -763,12 +833,10 @@ class Dialog_Acts:
                 words = user_input.lower().split()
                 for category, keywords in keywords_2.items():
                     if any(keyword in words for keyword in keywords):
-                        state.current_state = "AskForMissingInfo2"
+                        state.current_state = "AskForAdditionalRequirements"
             else:
                 state.currently_selected_restaurant = state.found_restaurants[0]
-                system_utterance = Helpers.sell_restaurant(
-                    state.currently_selected_restaurant
-                )
+                system_utterance = Helpers.sell_restaurant(state)
 
         return system_utterance
 
@@ -782,9 +850,7 @@ class Dialog_Acts:
             system_utterance = f"The restaurant {state.currently_selected_restaurant.name} is the only restaurant that meets your preferences."
         else:
             state.currently_selected_restaurant = random.choice(other_recommendations)
-            system_utterance = Helpers.sell_restaurant(
-                state.currently_selected_restaurant
-            )
+            system_utterance = Helpers.sell_restaurant(state)
         return system_utterance
 
     """
@@ -865,7 +931,8 @@ class State:
         self.helpers = Helpers()
         self.last_system_utterance = ""
         self.ambiguity = {}
-        self.found_restaurants = []
+        self.found_restaurants1 = []
+        self.filtered_restaurants = []
         self.currently_selected_restaurant: Restaurant = None
         self.file_path_restaurants = file_path_restaurants
         self.additional_requirements = {

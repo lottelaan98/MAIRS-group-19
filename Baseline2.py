@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, accuracy_score
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+
 class Baseline2:
     """
     Baseline 2 classifies utterances based on previously defined key-words
@@ -88,19 +89,21 @@ class Baseline2:
 
     def __init__(self, dataset):
         self.dataset = dataset
-        self.dataset_without_duplicates = self.dataset.drop_duplicates(subset=['utterance content'])
-        self.vectorizer = TfidfVectorizer(max_features=500)  # This is fine as is
+        self.dataset_without_duplicates = self.dataset.drop_duplicates(
+            subset=["utterance content"]
+        )
+        self.vectorizer = TfidfVectorizer(max_features=500)
 
     def classify(self, sentence):
         """
         Finds the dialog act of a given sentence by looping over the keywords dictionary.
-        Returns the predicted dialog act.        
+        Returns the predicted dialog act.
         """
         for dialog_act, keywords in self.df_keywords.items():
             for keyword in keywords:
                 if keyword in sentence:
                     return dialog_act
-        return 'unknown'
+        return "unknown"
 
     def evaluate(self, dataset):
         """
@@ -110,23 +113,25 @@ class Baseline2:
         correct = 0
 
         for _, row in dataset.iterrows():
-            dialog_act = row['dialog act']
-            utterance = row['utterance content']
-            prediction = self.classify(utterance)            
+            dialog_act = row["dialog act"]
+            utterance = row["utterance content"]
+            prediction = self.classify(utterance)
             if prediction == dialog_act:
                 correct += 1
 
         return correct / len(dataset)
-    
+
     def find_x_and_y(self, dataset):
-        x = dataset['utterance content']  # Keep original sentences for classification
-        y = dataset['dialog act']  
+        x = dataset["utterance content"]  # Keep original sentences for classification
+        y = dataset["dialog act"]
         return x, y
-    
+
     def train_and_test(self, x, y):
         y_pred = []
-        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.15, random_state=42)
-        
+        x_train, x_test, y_train, y_test = train_test_split(
+            x, y, test_size=0.15, random_state=42
+        )
+
         # Classify each utterance in the test set
         for sentence in x_test:
             prediction = self.classify(sentence)  # Call the classify method
