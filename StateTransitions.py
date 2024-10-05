@@ -176,7 +176,7 @@ class Helpers:
 
     @staticmethod
     def sell_restaurant(found_restaurant):
-        return f"""I recommend {found_restaurant.name} in the {found_restaurant.area} area, serving {found_restaurant.food} cuisine, with {found_restaurant.pricerange} prices."""
+        return f"""I recommend {found_restaurant.name} in the {found_restaurant.area} area, serving {found_restaurant.food} cuisine, with {found_restaurant.pricerange} prices. Let me know if you need the post code, address or phone number."""
 
     @staticmethod
     def ask_for_confirmation(state):
@@ -245,10 +245,9 @@ class Helpers:
                     # Check for ambiguity
                     if key in state.user_preferences and not overwrite:
                         # Remove this key from user preferences and add to the ambiguity dictionary.
+                        state.ambiguity[key] = [state.user_preferences[key], word]
                         state.user_preferences.pop(key)
                         state.still_needed_info.append(key)
-                        print(state.ambiguity)
-                        state.ambiguity[key] = [state.user_preferences[key], word]
                     else:
                         state.user_preferences[key] = word
                         if key in state.still_needed_info:
@@ -274,10 +273,9 @@ class Helpers:
                     # Check for ambiguity
                     if key in state.user_preferences and not overwrite:
                         # Remove this key from user preferences and add to the ambiguity dictionary.
+                        state.ambiguity[key] = [state.user_preferences[key], "any"]
                         state.user_preferences.pop(key)
                         state.still_needed_info.append(key)
-                        print(key)
-                        state.ambiguity[key] = [state.user_preferences[key], "any"]
                     else:
                         state.user_preferences[key] = "any"
                         if key in state.still_needed_info:
@@ -296,6 +294,9 @@ class Helpers:
 
     @staticmethod
     def perform_levenshtein(user_input):
+        """
+        Performs Levenshtein algorithm on a certain user input. Returns
+        """
         for key, words in keywords.items():
             for word in words:
                 if any(
@@ -351,6 +352,7 @@ class Dialog_Acts:
         return system_utterance
 
     def affirm(self, state):
+        print("affirm state = ", state.current_state)
         system_utterance = state.last_system_utterance
         if state.current_state == "AskForConfirmation":
             system_utterance = Helpers.find_restaurant(state)
@@ -359,7 +361,8 @@ class Dialog_Acts:
             words = state.last_system_utterance.split()
             if "town" in words[-1]:
                 state.user_preferences["area"] = state.last_system_utterance.split()[11]
-                state.still_needed_info.remove("area")
+                if "area" in state.still_needed_info:
+                    state.still_needed_info.remove("area")
                 system_utterance = (
                     f'Okay. The area is now set to {state.user_preferences["area"]}. '
                 )
@@ -367,11 +370,13 @@ class Dialog_Acts:
                 state.user_preferences["pricerange"] = (
                     state.last_system_utterance.split()[11]
                 )
-                state.still_needed_info.remove("pricerange")
+                if "pricerange" in state.still_needed_info:
+                    state.still_needed_info.remove("pricerange")
                 system_utterance = f'Okay. The price range is now set to {state.user_preferences["pricerange"]}. '
             elif "food" in words[-1]:
                 state.user_preferences["food"] = state.last_system_utterance.split()[11]
-                state.still_needed_info.remove("food")
+                if "food" in state.still_needed_info:
+                    state.still_needed_info.remove("food")
                 system_utterance = f'Okay. Your food preference is now set to {state.user_preferences["food"]}. '
 
             extra_text = ""
@@ -534,38 +539,14 @@ class Dialog_Acts:
         """
         When in state InformThatThereIsNoRestaurant: The user_input will be in the form of "How about...".
         Then we run find_restaurants again with the new preference.
-        Er zijn 2 soorten:
-        1 vanuit InformThatThereIsNoRestaurant -> How about.... -> find_restaurants
-        1 vanuit GiveRestaurantRecommendation -> Verwijder eerste uit de restaurants list en geef de nieuwe nummer 1
+
+        When in state GiveRestaurantRecommendation, the user wants another restaurant -> Remove the first
+        restaurant from the restaurant list and give the new number 1.
         """
-
-        def detect_unlisted_keywords():
-            words = user_input.split()  # Split the sentence into words
-            unlisted_keywords = []
-
-            # Iterate over each word in the user input
-            for word in words:
-                for category in keywords:
-                    # If the word is found in the keywords of any category and not in preferences
-                    if (
-                        word in keywords[category]
-                        and word not in state.user_preferences
-                    ):
-                        return True
-
-            return False
 
         system_utterance = state.last_system_utterance
 
-        if detect_unlisted_keywords():
-            state.user_preferences = {}
-
-            Helpers.extract_preferences(state, user_input, True)
-            print(state.user_preferences)
-            state.current_state == "AskForMissingInfo"
-            system_utterance = Helpers.ask_for_missing_info(state)
-
-        elif state.current_state == "InformThatThereIsNoRestaurant":
+        if state.current_state == "InformThatThereIsNoRestaurant":
             Helpers.extract_preferences(state, user_input, True)
             state.found_restaurants = []
             system_utterance = Helpers.find_restaurant(state)

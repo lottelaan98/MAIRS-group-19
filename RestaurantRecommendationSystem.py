@@ -120,6 +120,10 @@ class SystemDialog:
         return possible_restaurant
 
     def classify_user_input(self, user_input) -> str:
+        """
+        Input is a user utterance. Output is the predicted dialog act (i.e. class) of this user utterance.
+        """
+
         def correct_sentence(sentence):
             corrected_sentence = []
             words = sentence.split()  # Split sentence into words
@@ -144,16 +148,24 @@ class SystemDialog:
 
             return " ".join(corrected_sentence)
 
-        user_input = correct_sentence(user_input)
-
-        """
-        Input is a user utterance. Output is the predicted dialog act (i.e. class) of this user utterance.
-        """
         # Transform input to match the trained model
         preprocessed_input = self.vectorizer.transform([user_input.lower()])
         predicted_class: str = self.random_forest.rf_classifier.predict(
             preprocessed_input
         )[0]
+
+        if predicted_class == "null":
+            corrected_user_input = correct_sentence(user_input)
+
+            # Transform input to match the trained model
+            preprocessed_input2 = self.vectorizer.transform(
+                [corrected_user_input.lower()]
+            )
+            predicted_class2: str = self.random_forest.rf_classifier.predict(
+                preprocessed_input2
+            )[0]
+            return predicted_class2
+
         return predicted_class
 
     def perform_dialog_act(self, predicted_class, user_input):
