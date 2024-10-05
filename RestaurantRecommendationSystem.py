@@ -2,8 +2,6 @@
 from RandomForest import RandomForest
 from RestaurantRecommendationClassification import Classification
 import StateTransitions
-import nltk
-from nltk.corpus import words
 import Levenshtein
 from StateTransitions import keywords
 import difflib
@@ -16,9 +14,9 @@ import difflib
 ##################################################################################################################
 
 
-file_path_restaurant = 'C:\\Users\\Matsb\\OneDrive\\Documents\\Python Scripts\\MAIRS-group-19\\restaurant_info.csv'
+file_path_restaurant = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\restaurant_info.csv"
 
-file_path_dialog = "C:\\Users\\Matsb\\OneDrive\\Documents\\Python Scripts\\MAIRS-group-19\\dialog_acts.dat"
+file_path_dialog = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
 
 
 class SystemDialog:
@@ -42,19 +40,19 @@ class SystemDialog:
         random_forest.perform_random_forest()
 
         return random_forest
-    
+
     def get_preference_second(user_input):
-        keys = ['touristic', 'romantic', 'children', 'assignedseats']
-        result = {key: 'any' for key in keys}
+        keys = ["touristic", "romantic", "children", "assignedseats"]
+        result = {key: "any" for key in keys}
         user_input = user_input.lower()
 
         keywords_2 = {
-            'touristic':     ['touristic'],
-            'romantic':      ['romantic'],
-            'children':      ['children'],
-            'assignedseats': ['assigned seats', 'reservation']
+            "touristic": ["touristic"],
+            "romantic": ["romantic"],
+            "children": ["children"],
+            "assignedseats": ["assigned seats", "reservation"],
         }
-    
+
         negations = ["no", "not", "don't", "do not", "without", "none"]
 
         input_words = user_input.split()
@@ -63,56 +61,72 @@ class SystemDialog:
                 if word in user_input:
                     word_idx = user_input.find(word)
                     negated = any(neg in user_input[:word_idx] for neg in negations)
-                
+
                     if negated:
-                        result[key] = f'not {word}'
+                        result[key] = f"not {word}"
                     else:
                         result[key] = word
-                    break 
+                    break
         for key, value in result.items():
-            if value == 'any':
+            if value == "any":
                 for word in keywords_2[key]:
                     matches = difflib.get_close_matches(word, input_words, cutoff=0.8)
                     if matches:
                         result[key] = word
                         break
 
-        if result['assignedseats'] in ['assigned seats', 'reservation']:
-            result['assignedseats'] = 0
+        if result["assignedseats"] in ["assigned seats", "reservation"]:
+            result["assignedseats"] = 0
         return result
 
     def apply_rules(possible_restaurant, user_input):
         print(user_input)
-        if user_input['touristic'] == 'touristic': 
-            possible_restaurant = possible_restaurant[(possible_restaurant['pricerange'] == 'cheap') & (possible_restaurant['food_quality'] != 'normal') & (possible_restaurant['food'] != 'roumanian')]
-        if user_input['touristic'] != 'touristic': 
-            possible_restaurant = possible_restaurant[~((possible_restaurant['pricerange'] == 'cheap') & (possible_restaurant['food_quality'].isin(['good', 'excellent'])))]
-        if user_input['assignedseats'] == 'assigned seats':
-            possible_restaurant = possible_restaurant[(possible_restaurant['crowdedness']== 'busy')]
-        if user_input['children'] == 'children':
-            possible_restaurant = possible_restaurant[(possible_restaurant['length_of_stay'] != 'long')]
-        if user_input['romantic'] == 'romantic':
-            possible_restaurant = possible_restaurant[(possible_restaurant['crowdedness'] != 'busy') & (possible_restaurant['length_of_stay']== 'long')]
+        if user_input["touristic"] == "touristic":
+            possible_restaurant = possible_restaurant[
+                (possible_restaurant["pricerange"] == "cheap")
+                & (possible_restaurant["food_quality"] != "normal")
+                & (possible_restaurant["food"] != "roumanian")
+            ]
+        if user_input["touristic"] != "touristic":
+            possible_restaurant = possible_restaurant[
+                ~(
+                    (possible_restaurant["pricerange"] == "cheap")
+                    & (possible_restaurant["food_quality"].isin(["good", "excellent"]))
+                )
+            ]
+        if user_input["assignedseats"] == "assigned seats":
+            possible_restaurant = possible_restaurant[
+                (possible_restaurant["crowdedness"] == "busy")
+            ]
+        if user_input["children"] == "children":
+            possible_restaurant = possible_restaurant[
+                (possible_restaurant["length_of_stay"] != "long")
+            ]
+        if user_input["romantic"] == "romantic":
+            possible_restaurant = possible_restaurant[
+                (possible_restaurant["crowdedness"] != "busy")
+                & (possible_restaurant["length_of_stay"] == "long")
+            ]
         return possible_restaurant
 
     def classify_user_input(self, user_input) -> str:
-        
+
         def correct_sentence(sentence):
             corrected_sentence = []
             words = sentence.split()  # Split sentence into words
 
-    # Iterate over each word in the sentence
+            # Iterate over each word in the sentence
             for word in words:
                 corrected_word = word
                 min_overall_distance = 2
 
-        # Check the word against all categories
+                # Check the word against all categories
                 for category in keywords:
                     for keyword in keywords[category]:
-                # Compute Levenshtein distance between word and keyword
+                        # Compute Levenshtein distance between word and keyword
                         distance = Levenshtein.distance(word, keyword)
-                
-                # If a closer match is found, update the corrected word
+
+                        # If a closer match is found, update the corrected word
                         if distance < min_overall_distance:
                             min_overall_distance = distance
                             corrected_word = keyword
@@ -120,7 +134,7 @@ class SystemDialog:
                 corrected_sentence.append(corrected_word)
 
             return " ".join(corrected_sentence)
-        
+
         user_input = correct_sentence(user_input)
         """
         Input is a user utterance. Output is the predicted dialog act (i.e. class) of this user utterance.

@@ -6,7 +6,7 @@ import random
 #############################        CHANGE THE PATH TO MATCH YOUR COMPUTER           #############################
 ##################################################################################################################
 
-file_path_restaurant = "/Users/youssefbenmansour/Downloads/restaurant_info.csv"
+file_path_restaurant = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\restaurant_info.csv"
 
 
 # This dictionary contains as keys all the possible dialog states. The values of these keys are the possible subsequent states.
@@ -502,7 +502,7 @@ class Dialog_Acts:
             system_utterance = Helpers.ask_for_missing_info(state)
         elif state.current_state == "AskForMissingInfo":
             result = Helpers.perform_levenshtein(user_input)
-         
+
             if result is not None:
                 state.current_state = "AskUserForClarification"
                 key, word = result
@@ -541,25 +541,26 @@ class Dialog_Acts:
         1 vanuit GiveRestaurantRecommendation -> Verwijder eerste uit de restaurants list en geef de nieuwe nummer 1
         """
 
-
         def detect_unlisted_keywords():
             words = user_input.split()  # Split the sentence into words
             unlisted_keywords = []
 
-    # Iterate over each word in the user input
+            # Iterate over each word in the user input
             for word in words:
                 for category in keywords:
-            # If the word is found in the keywords of any category and not in preferences
-                    if word in keywords[category] and word not in state.user_preferences:
+                    # If the word is found in the keywords of any category and not in preferences
+                    if (
+                        word in keywords[category]
+                        and word not in state.user_preferences
+                    ):
                         return True
 
             return False
-        
 
         system_utterance = state.last_system_utterance
 
         if detect_unlisted_keywords():
-            state.user_preferences ={}
+            state.user_preferences = {}
 
             Helpers.extract_preferences(state, user_input, True)
             print(state.user_preferences)
@@ -602,7 +603,7 @@ class Dialog_Acts:
             )
         return system_utterance
 
-    '''
+    """
     def request(self, state, user_input):
         output_text = ""
         if "address" in user_input:
@@ -621,8 +622,7 @@ class Dialog_Acts:
             return "Can you repeat that please?"
 
         return output_text
-    '''
-    
+    """
 
     def request(self, state, user_input):
         def get_closest_word(user_input, target_words, threshold=1):
@@ -631,22 +631,21 @@ class Dialog_Acts:
                     if Levenshtein.distance(word.lower(), target_word) <= threshold:
                         return target_word
             return None
-        
+
         output_text = ""
-    
-    
+
         address_words = ["address"]
         post_words = ["post"]
         phone_words = ["phone"]
         if get_closest_word(user_input, address_words):
             output_text = f"The address of {state.currently_selected_restaurant.name} is on {state.currently_selected_restaurant.address}. "
-    
+
         if get_closest_word(user_input, post_words):
             output_text += f"The post code of {state.currently_selected_restaurant.name} is {state.currently_selected_restaurant.postcode}. "
-    
+
         if get_closest_word(user_input, phone_words):
             output_text += f"The phone number of {state.currently_selected_restaurant.name} is {state.currently_selected_restaurant.phone}."
-    
+
         if output_text == "":
             return "Can you repeat that please?"
 
@@ -668,7 +667,8 @@ class Dialog_Acts:
             return "You're welcome. Good bye."
         else:
             return "You're welcome."
-        
+
+
 class State:
     def __init__(self):
         self.current_state = "Welcome"

@@ -3,23 +3,32 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report, accuracy_score, roc_auc_score, RocCurveDisplay
+from sklearn.metrics import (
+    classification_report,
+    accuracy_score,
+    roc_auc_score,
+    RocCurveDisplay,
+)
 
-df = pd.read_csv('dialog_acts.dat') 
-df.columns =['dialog']
+df = pd.read_csv(
+    "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
+)
+df.columns = ["dialog"]
 df = df.astype(str)
-df['dialog'].str.lower()
+df["dialog"].str.lower()
 
-df['dialog act'] = df['dialog'].str.split(' ', 1).str[0] 
-df['utterance content'] = df['dialog'].str.split(' ', 1).str[1]  
+df["dialog act"] = df["dialog"].str.split(" ", 1).str[0]
+df["utterance content"] = df["dialog"].str.split(" ", 1).str[1]
 
-utterance = ['utterance content']
-dialog = 'dialog act'
+utterance = ["utterance content"]
+dialog = "dialog act"
 random_seed = 888
 
-df_train, df_test = train_test_split(df, test_size=0.2, random_state=random_seed, stratify=df[target_col])
+df_train, df_test = train_test_split(
+    df, test_size=0.2, random_state=random_seed, stratify=df[target_col]
+)
 
-encoder = OneHotEncoder(sparse=False, handle_unknown='ignore')
+encoder = OneHotEncoder(sparse=False, handle_unknown="ignore")
 
 X_train = encoder.fit_transform(df_train[utterance])
 X_test = encoder.transform(df_test[utterance])
@@ -27,7 +36,7 @@ X_test = encoder.transform(df_test[utterance])
 y_train = df_train[dialog]
 y_test = df_test[dialog]
 
-clf = LogisticRegression(penalty='none', random_state=random_seed)
+clf = LogisticRegression(penalty="none", random_state=random_seed)
 clf.fit(X_train, y_train)
 
 y_pred = clf.predict(X_test)
