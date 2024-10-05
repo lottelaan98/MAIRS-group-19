@@ -1,12 +1,11 @@
 # Restaurant recommendation system
 from RandomForest import RandomForest
-from RestaurantRecommendationClassification import Classification
 import StateTransitions
-import nltk
-from nltk.corpus import words
 import Levenshtein
 from StateTransitions import keywords
 import difflib
+import pandas as pd
+
 
 # Download the words dataset if not already available
 # nltk.download("words")
@@ -16,19 +15,28 @@ import difflib
 ##################################################################################################################
 
 
-file_path_restaurant = 'C:\\Users\\Matsb\\OneDrive\\Documents\\Python Scripts\\MAIRS-group-19\\restaurant_info.csv'
+file_path_restaurant = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\restaurant_info.csv"
 
-file_path_dialog = "C:\\Users\\Matsb\\OneDrive\\Documents\\Python Scripts\\MAIRS-group-19\\dialog_acts.dat"
+file_path_dialog = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
+
+
+def load_data() -> pd.DataFrame:
+    # Load the data into a DataFrame
+    df = pd.read_csv(file_path_dialog, header=None)
+    # Split each row into 'dialog act' and 'utterance content'
+    df["dialog act"] = df[0].apply(lambda x: x.split(" ", 1)[0].lower())
+    df["utterance content"] = df[0].apply(lambda x: x.split(" ", 1)[1].lower())
+    df = df.drop(columns=[0])
+    return df
 
 
 class SystemDialog:
     def __init__(self):
-        self.classification = Classification(file_path_dialog)
         # Store the random_forest instance here
         self.random_forest = self.train_random_forest_classifier()
         # Access vectorizer after initialization
         self.vectorizer = self.random_forest.vectorizer
-        self.state = StateTransitions.State()
+        self.state = StateTransitions.State(file_path_restaurant)
         self.acts = StateTransitions.Dialog_Acts()
         self.turn_index = 0
 
@@ -36,25 +44,25 @@ class SystemDialog:
         """
         This function is called in the beginning, in order to have a classifier to classify the user utterances in 15 different dialog acts
         """
-        df = self.classification.load_data()
+        df = load_data()
         print("One moment please. We are training our classifier.")
         random_forest = RandomForest(df)
         random_forest.perform_random_forest()
 
         return random_forest
-    
+
     def get_preference_second(user_input):
-        keys = ['touristic', 'romantic', 'children', 'assignedseats']
-        result = {key: 'any' for key in keys}
+        keys = ["touristic", "romantic", "children", "assignedseats"]
+        result = {key: "any" for key in keys}
         user_input = user_input.lower()
 
         keywords_2 = {
-            'touristic':     ['touristic'],
-            'romantic':      ['romantic'],
-            'children':      ['children'],
-            'assignedseats': ['assigned seats', 'reservation']
+            "touristic": ["touristic"],
+            "romantic": ["romantic"],
+            "children": ["children"],
+            "assignedseats": ["assigned seats", "reservation"],
         }
-    
+
         negations = ["no", "not", "don't", "do not", "without", "none"]
 
         input_words = user_input.split()
@@ -63,65 +71,81 @@ class SystemDialog:
                 if word in user_input:
                     word_idx = user_input.find(word)
                     negated = any(neg in user_input[:word_idx] for neg in negations)
-                
+
                     if negated:
-                        result[key] = f'not {word}'
+                        result[key] = f"not {word}"
                     else:
                         result[key] = word
-                    break 
+                    break
         for key, value in result.items():
-            if value == 'any':
+            if value == "any":
                 for word in keywords_2[key]:
                     matches = difflib.get_close_matches(word, input_words, cutoff=0.8)
                     if matches:
                         result[key] = word
                         break
 
-        if result['assignedseats'] in ['assigned seats', 'reservation']:
-            result['assignedseats'] = 0
+        if result["assignedseats"] in ["assigned seats", "reservation"]:
+            result["assignedseats"] = 0
         return result
 
     def apply_rules(possible_restaurant, user_input):
         print(user_input)
-        if user_input['touristic'] == 'touristic': 
-            possible_restaurant = possible_restaurant[(possible_restaurant['pricerange'] == 'cheap') & (possible_restaurant['food_quality'] != 'normal') & (possible_restaurant['food'] != 'roumanian')]
-        if user_input['touristic'] != 'touristic': 
-            possible_restaurant = possible_restaurant[~((possible_restaurant['pricerange'] == 'cheap') & (possible_restaurant['food_quality'].isin(['good', 'excellent'])))]
-        if user_input['assignedseats'] == 'assigned seats':
-            possible_restaurant = possible_restaurant[(possible_restaurant['crowdedness']== 'busy')]
-        if user_input['children'] == 'children':
-            possible_restaurant = possible_restaurant[(possible_restaurant['length_of_stay'] != 'long')]
-        if user_input['romantic'] == 'romantic':
-            possible_restaurant = possible_restaurant[(possible_restaurant['crowdedness'] != 'busy') & (possible_restaurant['length_of_stay']== 'long')]
+        if user_input["touristic"] == "touristic":
+            possible_restaurant = possible_restaurant[
+                (possible_restaurant["pricerange"] == "cheap")
+                & (possible_restaurant["food_quality"] != "normal")
+                & (possible_restaurant["food"] != "roumanian")
+            ]
+        if user_input["touristic"] != "touristic":
+            possible_restaurant = possible_restaurant[
+                ~(
+                    (possible_restaurant["pricerange"] == "cheap")
+                    & (possible_restaurant["food_quality"].isin(["good", "excellent"]))
+                )
+            ]
+        if user_input["assignedseats"] == "assigned seats":
+            possible_restaurant = possible_restaurant[
+                (possible_restaurant["crowdedness"] == "busy")
+            ]
+        if user_input["children"] == "children":
+            possible_restaurant = possible_restaurant[
+                (possible_restaurant["length_of_stay"] != "long")
+            ]
+        if user_input["romantic"] == "romantic":
+            possible_restaurant = possible_restaurant[
+                (possible_restaurant["crowdedness"] != "busy")
+                & (possible_restaurant["length_of_stay"] == "long")
+            ]
         return possible_restaurant
 
     def classify_user_input(self, user_input) -> str:
-        
         def correct_sentence(sentence):
             corrected_sentence = []
             words = sentence.split()  # Split sentence into words
 
-    # Iterate over each word in the sentence
+            # Iterate over each word in the sentence
             for word in words:
                 corrected_word = word
                 min_overall_distance = 2
 
-        # Check the word against all categories
+                # Check the word against all categories
                 for category in keywords:
                     for keyword in keywords[category]:
-                # Compute Levenshtein distance between word and keyword
+                        # Compute Levenshtein distance between word and keyword
                         distance = Levenshtein.distance(word, keyword)
-                
-                # If a closer match is found, update the corrected word
-                        if distance < min_overall_distance:
+
+                        # If a closer match is found, update the corrected word
+                        if distance <= min_overall_distance:
                             min_overall_distance = distance
                             corrected_word = keyword
 
                 corrected_sentence.append(corrected_word)
 
             return " ".join(corrected_sentence)
-        
+
         user_input = correct_sentence(user_input)
+
         """
         Input is a user utterance. Output is the predicted dialog act (i.e. class) of this user utterance.
         """
@@ -175,7 +199,7 @@ class SystemDialog:
             user_input = input("Me: ").lower()
 
             predicted_class = self.classify_user_input(user_input)
-            # print("PREDICTED CLASS = ", predicted_class)
+            print("PREDICTED CLASS = ", predicted_class)
 
             system_utterance = self.perform_dialog_act(predicted_class, user_input)
             self.state.last_system_utterance = system_utterance
