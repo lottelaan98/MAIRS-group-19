@@ -2,9 +2,10 @@
 from RandomForest import RandomForest
 import StateTransitions
 import Levenshtein
-from StateTransitions import keywords
+from StateTransitions import keywords_1
 import difflib
 import pandas as pd
+import time
 
 
 # Download the words dataset if not already available
@@ -18,6 +19,10 @@ import pandas as pd
 file_path_restaurants = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\restaurant_info2.csv"
 
 file_path_dialog = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
+
+allow_dialog_restarts: bool = True
+use_delay: bool = True
+output_in_caps: bool = True
 
 
 def load_data() -> pd.DataFrame:
@@ -101,8 +106,8 @@ class SystemDialog:
                 min_overall_distance = 2
 
                 # Check the word against all categories
-                for category in keywords:
-                    for keyword in keywords[category]:
+                for category in keywords_1:
+                    for keyword in keywords_1[category]:
                         # Compute Levenshtein distance between word and keyword
                         distance = Levenshtein.distance(word, keyword)
 
@@ -168,25 +173,35 @@ class SystemDialog:
         elif predicted_class == "request":
             return self.acts.request(self.state, user_input)
         elif predicted_class == "restart":
-            return self.acts.restart(self.state)
+            return self.acts.restart(self.state, allow_dialog_restarts)
         else:
             return self.acts.thankyou(self.state, user_input)
 
     def dialog_system(self):
-        print(
-            "System:  Hello, welcome to the UU restaurant system! You can ask for restaurants by area, price range or food type. How may I help you?"
-        )
-
         self.state.last_system_utterance = "Hello, welcome to the UU restaurant system! You can ask for restaurants by area, price range or food type. How may I help you?"
 
+        # Print the welcome text
+        if output_in_caps:
+            self.state.last_system_utterance = self.state.last_system_utterance.upper()
+
+        print(self.state.last_system_utterance)
+
+        # Do the rest of the dialog
         while self.state.current_state != "End":
             user_input = input("Me: ").lower()
 
+            # Predict class and perform actions based on this.
             predicted_class = self.classify_user_input(user_input)
-            print("PREDICTED CLASS = ", predicted_class)
-
             system_utterance = self.perform_dialog_act(predicted_class, user_input)
             self.state.last_system_utterance = system_utterance
+
+            # Insert delay if use_delay is True
+            if use_delay:
+                time.sleep(1)
+
+            # Print the system utterance to the console.
+            if output_in_caps:
+                system_utterance = system_utterance.upper()
 
             print("System: ", system_utterance)
 
