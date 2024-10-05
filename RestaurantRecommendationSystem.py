@@ -20,8 +20,8 @@ file_path_restaurants = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\Scho
 file_path_dialog = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
 
 allow_dialog_restarts: bool = True
-use_delay: bool = True
-output_in_caps: bool = True
+use_delay: bool = False
+output_in_caps: bool = False
 use_baseline_as_classifier: bool = False
 
 
@@ -111,7 +111,6 @@ class SystemDialog:
         return predicted_class
 
     def perform_dialog_act(self, predicted_class, user_input):
-        print(predicted_class)
         if predicted_class == "ack":
             return self.acts.ack(self.state)
         elif predicted_class == "affirm":
