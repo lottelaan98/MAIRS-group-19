@@ -15,7 +15,7 @@ import pandas as pd
 ##################################################################################################################
 
 
-file_path_restaurant = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\restaurant_info.csv"
+file_path_restaurants = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\restaurant_info2.csv"
 
 file_path_dialog = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
 
@@ -36,7 +36,7 @@ class SystemDialog:
         self.random_forest = self.train_random_forest_classifier()
         # Access vectorizer after initialization
         self.vectorizer = self.random_forest.vectorizer
-        self.state = StateTransitions.State(file_path_restaurant)
+        self.state = StateTransitions.State(file_path_restaurants)
         self.acts = StateTransitions.Dialog_Acts()
         self.turn_index = 0
 

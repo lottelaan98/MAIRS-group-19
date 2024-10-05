@@ -10,7 +10,7 @@ class RandomForest:
         self.original_dataset = dataset
         self.dataset_without_duplicates = self.original_dataset.drop_duplicates()
         self.rf_classifier = None
-        self.vectorizer = TfidfVectorizer(max_features=500)  # This is fine as is
+        self.vectorizer = TfidfVectorizer(max_features=500)
 
     def find_x_and_y(self, dataset):
         dataset.rename(
@@ -48,4 +48,6 @@ class RandomForest:
         num_of_sets = self.difficult_cases.num_of_sets()
         for i in range(num_of_sets):
             # Print the current set being processed
-            self.difficult_cases.perform_difficult(i, self.rf_classifier, self.vectorizer)
+            self.difficult_cases.perform_difficult(
+                i, self.rf_classifier, self.vectorizer
+            )

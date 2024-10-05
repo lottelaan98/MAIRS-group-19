@@ -64,7 +64,7 @@ keywords_2 = {
 
 keywords = {
     "pricerange": ["cheap", "moderate", "moderately", "expensive"],
-    "area": ["north", "south", "east", "west", "center"],
+    "area": ["north", "south", "east", "west", "center", "centre"],
     "food": [
         "african",
         "asian oriental",
@@ -179,8 +179,9 @@ class Helpers:
         state.found_restaurants = []
         input_list = []
         # Look in the CSV to find for any restaurants that may meet the criteria
-        data_restaurants = pd.read_csv(state.file_path_restaurants)
+        data_restaurants = pd.read_csv(state.file_path_restaurants, sep=";")
         filtered_df = data_restaurants
+        print("DATAFRAME = ", filtered_df)
         criteria = state.user_preferences
         # Loop through each criterion and apply the filter
         for key, value in criteria.items():
@@ -224,14 +225,15 @@ class Helpers:
             )
             if len(state.found_restaurants) == 0:
                 state.current_state = "InformThatThereIsNoRestaurant"
-                return "Sorry, I couldn't find a restaurant that matches your preferences. Would you like to change your requirements?"
+                return Helpers.tell_no_restaurant_found(state)
             state.currently_selected_restaurant = state.found_restaurants[0]
             found_restaurant = state.currently_selected_restaurant
             state.current_state = "GiveRestaurantRecommendation"
             return Helpers.sell_restaurant(found_restaurant)
 
-        return "Sorry, I couldn't find a restaurant that matches your preferences. Would you like to change your requirements?"
+        return Helpers.tell_no_restaurant_found(state)
 
+    @staticmethod
     def apply_rules(possible_restaurantt, user_input):
         possible_restaurant = pd.DataFrame(possible_restaurantt)
 
@@ -305,6 +307,37 @@ class Helpers:
         state.current_state = "AskForMissingInfo2"
         if all(value == "" for value in state.secondary_preference.values()):
             return "Are there any additional preferences you'd like to specify such as romantic atmosphere, requiring a reservation, or being child-friendly?"
+
+    @staticmethod
+    def tell_no_restaurant_found(state):
+        """
+        Returns a system utterance that tells the user that no restaurant is found that matches his preferences.
+        For example:
+        'Sorry, I couldn't find a cheap italian restaurant in the north.'
+        'Sorry, I couldn't find a cheap italian restaurant in any area.'
+
+        """
+        state.current_state = "InformThatThereIsNoRestaurant"
+
+        # Initialiseer de strings
+        price_string = ""
+        food_string = ""
+        area_string = ""
+
+        print(
+            "i have to tell them that i couldnt find anything. this is user prefrences: ",
+            state.user_preferences,
+        )
+
+        # Loop door de criteria
+        for key, value in state.user_preferences.items():
+            if key == "pricerange":
+                price_string = value if value != "any" else ""
+            elif key == "food":
+                food_string = value if value != "any" else ""
+            elif key == "area":
+                area_string = f"""in the {value}""" if value != "any" else "in any area"
+            return f"""Sorry, I couldn't find a {price_string} {food_string} restaurant {area_string}. Please change your requirements."""
 
     @staticmethod
     def sell_restaurant(found_restaurant):
@@ -664,6 +697,7 @@ class Dialog_Acts:
                 or state.current_state == "Welcome"
             ),
         )
+        print("preferences = ", state.user_preferences)
         if state.current_state == "AskForMissingInfo2":
             Helpers.extract_second_preferences(state, user_input)
 
