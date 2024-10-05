@@ -42,3 +42,10 @@ class RandomForest:
         x, y = self.find_x_and_y(self.dataset_without_duplicates)
         y_test, y_pred = self.train_and_test(x, y)
         print("Accuracy without duplicates:", accuracy_score(y_test, y_pred))
+
+    def process_difficult_cases(self):
+        # Iterate over each set of difficult cases
+        num_of_sets = self.difficult_cases.num_of_sets()
+        for i in range(num_of_sets):
+            # Print the current set being processed
+            self.difficult_cases.perform_difficult(i, self.rf_classifier, self.vectorizer)
