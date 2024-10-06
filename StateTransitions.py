@@ -387,7 +387,7 @@ class Helpers:
             confirmation_message = f"To clarify, you prefer a restaurant with these qualities: {', '.join(preferencesss)}."
         else:
             confirmation_message = (
-                "Let me confirm, you have not specified any preferences."
+                "Let me confirm, you have not specified any additional requirements?"
             )
 
         return confirmation_message
@@ -834,30 +834,13 @@ class Dialog_Acts:
 
         system_utterance = state.last_system_utterance
 
-        def detect_unlisted_keywords():
-            words = user_input.split()  # Split the sentence into words
-
-            # Iterate over each word in the user input
-            for word in words:
-                for category in keywords_1:
-                    # If the word is found in the keywords of any category and not in preferences
-                    if (
-                        word in keywords_1[category]
-                        and word not in state.user_preferences
-                    ):
-                        state.user_preferences[category] = word
-                        return True
-
-            return False
-
         if state.current_state == "InformThatThereIsNoRestaurant":
             Helpers.extract_preferences(state, user_input, True)
             system_utterance = state.last_system_utterance
 
-            if detect_unlisted_keywords():
-                state.found_restaurants1 = []
-                Helpers.find_restaurants1(state)
-                system_utterance = Helpers.communicate_found_restaurant(state)
+            state.found_restaurants1 = []
+            Helpers.find_restaurants1(state)
+            system_utterance = Helpers.communicate_found_restaurant(state)
 
         elif state.current_state == "GiveRestaurantRecommendation":
             # Remove the current found restaurant from the list
