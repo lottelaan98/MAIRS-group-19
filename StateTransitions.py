@@ -112,7 +112,6 @@ class Helpers:
 
         # Select a restaurant and give this recommendation to the user
         state.currently_selected_restaurant = state.found_restaurants1[0]
-        state.found_restaurant = state.currently_selected_restaurant
         state.current_state = "GiveRestaurantRecommendation"
         return Helpers.sell_restaurant(state)
 
@@ -174,7 +173,7 @@ class Helpers:
                 and restaurant.food != "romanian"
             ]
         # Filter for not touristic restaurants: not cheap and good or excellent food quality
-        else:
+        elif additional_requirements["touristic"] != "any":
             filtered_restaurants = [
                 restaurant
                 for restaurant in filtered_restaurants
@@ -318,9 +317,9 @@ class Helpers:
                         )
             return string
 
-        first_part = f"I recommend {state.found_restaurant.name} in the {state.found_restaurant.area} area, serving {state.found_restaurant.food} cuisine, with {state.found_restaurant.pricerange} prices."
+        first_part = f"I recommend {state.currently_selected_restaurant.name} in the {state.currently_selected_restaurant.area} area, serving {state.currently_selected_restaurant.food} cuisine, with {state.currently_selected_restaurant.pricerange} prices."
         second_part = create_second_part()
-        third_part = "Let me know if you need the post code, address or phone number."
+        third_part = " Let me know if you need the post code, address or phone number."
 
         return first_part + second_part + third_part
 
@@ -835,9 +834,6 @@ class Dialog_Acts:
 
         system_utterance = state.last_system_utterance
 
-        if state.current_state == "InformThatThereIsNoRestaurant":
-            Helpers.extract_preferences(state, user_input, True)
-
         def detect_unlisted_keywords():
             words = user_input.split()  # Split the sentence into words
 
@@ -854,19 +850,21 @@ class Dialog_Acts:
 
             return False
 
-        system_utterance = state.last_system_utterance
+        if state.current_state == "InformThatThereIsNoRestaurant":
+            Helpers.extract_preferences(state, user_input, True)
+            system_utterance = state.last_system_utterance
 
-        if detect_unlisted_keywords():
-            state.found_restaurants1 = []
-            system_utterance = Helpers.communicate_found_restaurant(state)
+            if detect_unlisted_keywords():
+                state.found_restaurants1 = []
+                Helpers.find_restaurants1(state)
+                system_utterance = Helpers.communicate_found_restaurant(state)
 
         elif state.current_state == "GiveRestaurantRecommendation":
-            Helpers.extract_preferences(state, user_input, True)
-            Helpers.extract_additional_requirements(state, user_input)
             # Remove the current found restaurant from the list
-            del state.found_restaurants1[0]
+            del state.filtered_restaurants[0]
+
             # and provide another restaurant
-            if not state.found_restaurants1:
+            if not state.filtered_restaurants:
                 state.current_state = "InformThatThereIsNoRestaurant"
                 system_utterance = "Sorry, I couldn't find another restaurant that matches your preferences. Can you change your requirements?"
                 words = user_input.lower().split()
@@ -874,7 +872,7 @@ class Dialog_Acts:
                     if any(keyword in words for keyword in keywords):
                         state.current_state = "AskForAdditionalRequirements"
             else:
-                state.currently_selected_restaurant = state.found_restaurants1[0]
+                state.currently_selected_restaurant = state.filtered_restaurants[0]
                 system_utterance = Helpers.sell_restaurant(state)
 
         return system_utterance
@@ -901,11 +899,11 @@ class Dialog_Acts:
             return None
 
         input_words = user_input.split()
-        testtt = False
-        for key, words in keywords_2.items():
+        new_additional_preference = False
+        for _, words in keywords_2.items():
             for word in words:
                 if word in input_words:
-                    testtt = True
+                    new_additional_preference = True
         output_text = ""
 
         address_words = ["address"]
@@ -920,7 +918,7 @@ class Dialog_Acts:
         if get_closest_word(user_input, phone_words):
             output_text += f"The phone number of {state.currently_selected_restaurant.name} is {state.currently_selected_restaurant.phone}."
 
-        if testtt:
+        if new_additional_preference:
             state.current_state = "AskForMissingInfo2"
             Helpers.extract_additional_requirements(state, user_input)
         if output_text == "":
