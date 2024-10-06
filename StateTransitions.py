@@ -247,6 +247,9 @@ class Helpers:
             ]
             missing_text = ", ".join(missing_requirements)
             return f"Are there any additional preferences you'd like to specify for: {missing_text}?"
+        # When the user did not confirm the additional requirements:
+        else:
+            return "Which additional preferences would you like to specify such as romantic atmosphere, requiring a reservation, or being child-friendly?"
 
     @staticmethod
     def tell_no_restaurant_found(state):
