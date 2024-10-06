@@ -1,4 +1,5 @@
 import pandas as pd
+from DifficultCases import DifficultCases
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.ensemble import RandomForestClassifier
@@ -11,6 +12,7 @@ class RandomForest:
         self.dataset_without_duplicates = self.original_dataset.drop_duplicates()
         self.rf_classifier = None
         self.vectorizer = TfidfVectorizer(max_features=500)
+        self.difficult_cases = DifficultCases()
 
     def find_x_and_y(self, dataset):
         dataset.rename(
@@ -44,10 +46,6 @@ class RandomForest:
         print("Accuracy without duplicates:", accuracy_score(y_test, y_pred))
 
     def process_difficult_cases(self):
-        # Iterate over each set of difficult cases
-        num_of_sets = self.difficult_cases.num_of_sets()
-        for i in range(num_of_sets):
-            # Print the current set being processed
-            self.difficult_cases.perform_difficult(
-                i, self.rf_classifier, self.vectorizer
-            )
+        x, y = self.find_x_and_y(self.original_dataset)
+        self.train_and_test(x, y)
+        self.difficult_cases.process_difficult_cases(self.rf_classifier, self.vectorizer)
