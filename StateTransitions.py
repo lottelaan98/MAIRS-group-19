@@ -887,7 +887,7 @@ class Dialog_Acts:
         if allowed:
             state.current_state = "Welcome"
             state.user_preferences = {}
-            state.still_needed_inf = ["area", "food", "pricerange"]
+            state.still_needed_info = ["area", "food", "pricerange"]
             state.dialog_acts = Dialog_Acts()
             state.helpers = Helpers()
             state.last_system_utterance = "Okay. We start over. Welcome to the UU restaurant system! You can ask for restaurants by area, price range or food type. How may I help you?"
