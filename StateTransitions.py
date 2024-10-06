@@ -185,7 +185,7 @@ class Helpers:
             ]
 
         # Filter for assigned seats: restaurants that are busy
-        if additional_requirements["assignedseats"] == "assigned seats":
+        if additional_requirements["assignedseats"] == "assignedseats":
             filtered_restaurants = [
                 restaurant
                 for restaurant in filtered_restaurants
@@ -238,6 +238,15 @@ class Helpers:
         state.current_state = "AskForAdditionalRequirements"
         if all(value == "" for value in state.additional_requirements.values()):
             return "Are there any additional preferences you'd like to specify such as romantic atmosphere, requiring a reservation, or being child-friendly?"
+        # Elif to handle partially missing values
+        elif any(value == "" for value in state.additional_requirements.values()):
+            missing_requirements = [
+                key
+                for key, value in state.additional_requirements.items()
+                if value == ""
+            ]
+            missing_text = ", ".join(missing_requirements)
+            return f"Are there any additional preferences you'd like to specify for: {missing_text}?"
 
     @staticmethod
     def tell_no_restaurant_found(state):
@@ -262,9 +271,9 @@ class Helpers:
             elif key == "food":
                 food_string = value if value != "any" else ""
             elif key == "area":
-                area_string = f"""in the {value}""" if value != "any" else "in any area"
+                area_string = f"in the {value}" if value != "any" else "in any area"
 
-        return f"""Sorry, I couldn't find a {price_string} {food_string} restaurant {area_string}. Please change your requirements."""
+        return f"Sorry, I couldn't find a {price_string} {food_string} restaurant {area_string}. Please change your requirements."
 
     @staticmethod
     def sell_restaurant(state):
@@ -278,7 +287,7 @@ class Helpers:
             string = ""
 
             for key, value in state.additional_requirements.items():
-                if value != "":
+                if value != "any":
                     if key == "children":
                         string = (
                             string
@@ -306,14 +315,17 @@ class Helpers:
                         )
             return string
 
-        first_part = f"""I recommend {state.found_restaurant.name} in the {state.found_restaurant.area} area, serving {state.found_restaurant.food} cuisine, with {state.found_restaurant.pricerange} prices."""
+        first_part = f"I recommend {state.found_restaurant.name} in the {state.found_restaurant.area} area, serving {state.found_restaurant.food} cuisine, with {state.found_restaurant.pricerange} prices."
         second_part = create_second_part()
         third_part = "Let me know if you need the post code, address or phone number."
 
         return first_part + second_part + third_part
 
     @staticmethod
-    def ask_for_confirmation1(state):
+    def ask_for_confirmation1(state) -> str:
+        """
+        Moves the state to 'AskForConfirmation1' and returns the corresponding system utterance.
+        """
         state.current_state = "AskForConfirmation1"
 
         if len(state.user_preferences) != 3:
@@ -357,13 +369,13 @@ class Helpers:
         preferencesss = []
 
         # Check each preference and append the non-empty ones
-        if state.additional_requirements["touristic"]:
+        if state.additional_requirements["touristic"] != "any":
             preferencesss.append(f" Touristic")
-        if state.additional_requirements["romantic"]:
+        if state.additional_requirements["romantic"] != "any":
             preferencesss.append(f" Romantic")
-        if state.additional_requirements["children"]:
+        if state.additional_requirements["children"] != "any":
             preferencesss.append(f" Children allowed")
-        if state.additional_requirements["assignedseats"]:
+        if state.additional_requirements["assignedseats"] != "any":
             preferencesss.append(
                 f"with {state.additional_requirements['assignedseats']}"
             )
@@ -402,7 +414,16 @@ class Helpers:
         Extract preferences (romantic, children, assignedseats, touristic) from user_input and put in state.additional_requirements
         """
         keys = ["touristic", "romantic", "children", "assignedseats"]
-        result = {key: "" for key in keys}
+        result = {key: "any" for key in keys}
+        user_input = user_input.lower()
+
+        keywords_2 = {
+            "touristic": ["touristic"],
+            "romantic": ["romantic"],
+            "children": ["children"],
+            "assignedseats": ["assigned seats", "reservation"],
+        }
+
         negations = ["no", "not", "don't", "do not", "without", "none"]
 
         input_words = user_input.split()
@@ -426,7 +447,7 @@ class Helpers:
                         break
 
         if result["assignedseats"] in ["assigned seats", "reservation"]:
-            result["assignedseats"] = 0
+            result["assignedseats"] = "assignedseats"
 
         state.additional_requirements = result
 
@@ -443,7 +464,7 @@ class Helpers:
                     preference_extracted = True
                     # Check for ambiguity
                     if key in state.user_preferences and not overwrite:
-                        # Remove this key from user preferences and add to the ambiguity dictionary.
+                        # Remove this key from user preferences and add to the ambiguity dictionary and to the still needed info.
                         state.ambiguity[key] = [state.user_preferences[key], word]
                         state.user_preferences.pop(key)
                         state.still_needed_info.append(key)
@@ -464,10 +485,11 @@ class Helpers:
                 "doesn't matter",
             ]
         ):
-            for key in keywords_1.keys():
+            for key in keywords_1:
                 if key in user_input or Helpers.detect_any(
                     key, state.last_system_utterance
                 ):
+
                     preference_extracted = True
                     # Check for ambiguity
                     if key in state.user_preferences and not overwrite:
@@ -515,7 +537,7 @@ class Helpers:
         return f"For the {key} preference, would you like {possible_values[0]} or {possible_values[1]}?"
 
     @staticmethod
-    def fix_ambiguity(state, user_input):
+    def fix_ambiguity(state, user_input) -> str:
         """
         Checks the user_input to see which value for a specific preference (key) the user chooses.
         It adds the correct preference to the state.user_preferences dictionary and removes this key from the ambiguity dictionary.
@@ -528,10 +550,11 @@ class Helpers:
                 state.still_needed_info.remove(key)
                 state.user_preferences[key] = value
                 state.ambiguity.pop(key)
-                break
+                return f"Your choice for {key} is now set to: {value}. "
+        return "I'm sorry, I failed to adjust your choice. "
 
     @staticmethod
-    def provide_all_contact_info(restaurant):
+    def provide_all_contact_info(restaurant) -> str:
         return f"The restaurant {restaurant.name} is on {restaurant.address} with post code {restaurant.postcode}. This is their phone number: {restaurant.phone}"
 
 
@@ -662,16 +685,27 @@ class Dialog_Acts:
         If not, it wil go to the AskForConfirmation state.
         Return system utterance
         """
-        # First extract preferences from the dialog_act. If something is ambigu, it moves into the AskUserForClarification state.
+        # When the user just answered the question where the system asked for clarification, this ambiguity needs to be solved.
+        if state.current_state == "AskUserForClarification":
+            system_utterance1 = Helpers.fix_ambiguity(state, user_input)
+            # If the system has all the info it needs, then ask for confirmation
+            if not state.still_needed_info:
+                return Helpers.ask_for_confirmation1(state)
+            else:
+                state.current_state = "AskForMissingInfo1"
+                system_utterance2 = Helpers.ask_for_missing_info1(state)
+                return system_utterance1 + system_utterance2
+        # Extract preferences from the dialog_act only if there is no ambiguity to be solved.
+        else:
+            Helpers.extract_preferences(
+                state,
+                user_input,
+                (
+                    state.current_state == "InformThatThereIsNoRestaurant"
+                    or state.current_state == "Welcome"
+                ),
+            )
 
-        Helpers.extract_preferences(
-            state,
-            user_input,
-            (
-                state.current_state == "InformThatThereIsNoRestaurant"
-                or state.current_state == "Welcome"
-            ),
-        )
         if state.current_state == "AskForAdditionalRequirements":
             Helpers.extract_additional_requirements(state, user_input)
 
@@ -681,7 +715,7 @@ class Dialog_Acts:
             system_utterance = Helpers.ask_user_for_clarification(state)
 
         # Find a system utterance based on the preferences that are still missing
-        if state.still_needed_info:
+        elif state.still_needed_info:
             # System moves to state AskForMissingInfo
             system_utterance = Helpers.ask_for_missing_info1(state)
         elif state.current_state == "AskForAdditionalRequirements":
@@ -749,10 +783,10 @@ class Dialog_Acts:
         if state.current_state == "AskForAdditionalRequirements":
             return Helpers.communicate_found_restaurant(state)
 
-        if state.current_state == "Welcome":
-            # System moves to State AskForMissingInfo
-            system_utterance = Helpers.ask_for_missing_info1(state)
-        elif state.current_state == "AskForMissingInfo1":
+        if (
+            state.current_state == "AskForMissingInfo1"
+            or state.current_state == "Welcome"
+        ):
             result = Helpers.perform_levenshtein(user_input)
 
             if result is not None:
@@ -764,6 +798,9 @@ class Dialog_Acts:
                     system_utterance = f"Did you say you are looking for a restaurant in the {word} price range?"
                 elif key == "food":
                     system_utterance = f"Did you say you are looking for a restaurant that serves {word} food?"
+            if result is None and state.current_state == "Welcome":
+                # System moves to State AskForMissingInfo
+                system_utterance = "I'm sorry, I did not get that. Please give your preferences for area, price range and food type. "
         elif state.current_state == "AskUserForClarification":
             Helpers.fix_ambiguity(state, user_input)
             if state.ambiguity == {}:
@@ -803,10 +840,10 @@ class Dialog_Acts:
 
             # Iterate over each word in the user input
             for word in words:
-                for category in keywords:
+                for category in keywords_1:
                     # If the word is found in the keywords of any category and not in preferences
                     if (
-                        word in keywords[category]
+                        word in keywords_1[category]
                         and word not in state.user_preferences
                     ):
                         state.user_preferences[category] = word
@@ -860,6 +897,12 @@ class Dialog_Acts:
                         return target_word
             return None
 
+        input_words = user_input.split()
+        testtt = False
+        for key, words in keywords_2.items():
+            for word in words:
+                if word in input_words:
+                    testtt = True
         output_text = ""
 
         address_words = ["address"]
@@ -874,6 +917,9 @@ class Dialog_Acts:
         if get_closest_word(user_input, phone_words):
             output_text += f"The phone number of {state.currently_selected_restaurant.name} is {state.currently_selected_restaurant.phone}."
 
+        if testtt:
+            state.current_state = "AskForMissingInfo2"
+            Helpers.extract_additional_requirements(state, user_input)
         if output_text == "":
             return "Can you repeat that please?"
 
