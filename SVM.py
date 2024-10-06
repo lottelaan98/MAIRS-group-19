@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from DifficultCases import DifficultCases
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.svm import SVC
 from sklearn.model_selection import train_test_split
@@ -14,6 +15,7 @@ class SVM:
         self.dataset_without_duplicates = self.original_dataset.drop_duplicates(subset=['utterance content'])
         self.vectorizer = TfidfVectorizer()  # Adjust parameters as needed
         self.svm_classifier = None
+        self.difficult_cases = DifficultCases()
 
     def find_x_and_y(self, dataset):
         x = self.vectorizer.fit_transform(dataset['utterance content'])
@@ -49,14 +51,8 @@ class SVM:
                     print(f"True label = {y_test[i]}, Predicted label = {y_pred[i]}")
                     print("-" * 80)
 
-    # Ensure this function is called before processing difficult cases
-    def fit(self):
+    def process_difficult_cases(self):
         x, y = self.find_x_and_y(self.original_dataset)
         self.train_and_test(x, y)
-
-    def process_difficult_cases(self):
         self.difficult_cases.process_difficult_cases(self.svm_classifier, self.vectorizer)
-
-    def process_difficult_cases_f1score(self):
-        self.difficult_cases.f1_score(self.svm_classifier, self.vectorizer)
 
