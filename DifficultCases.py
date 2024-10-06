@@ -442,77 +442,77 @@ class DifficultCases():
         
         self.utterances_with_typos_in_data = {
             "inform": [
-                "not chnese", "not nrth", "not a cheap restaurant in the nort of town", "not itlian",
-                "not a moderatly priced restaurant", "not anny", "not in the norh part of town", "i am not looking for a cheap restuarant",
-                "it shouldn't be in the wesst part of town", "i'm not looking for a moderatly priced restaurant and it shouldn't be in the east part of twon"
+                "chnese", "nrth", "a cheap restaurant in the nort of town", "itlian",
+                "a moderatly priced restaurant", "anny", "in the norh part of town", "i am looking for a cheap restuarant",
+                "it should be in the wesst part of town", "i'm looking for a moderatly priced restaurant and it should be in the east part of twon"
             ],
             "request": [
-                "not the addres", "not the locatoin", "not the arrea", "dont care", "not the adrress",
-                "what's not the phne number", "what's not the phon number", "can i not get the numbr",
-                "not the phonne number", "dont request phone numbr"
+                "the addres", "the locatoin", "the arrea", "care", "the adrress",
+                "what's the phne number", "what's the phon number", "can i get the numbr",
+                "the phonne number", "request phone numbr"
             ],
             "thankyou": [
-                "not very good thank yuo bye bye", "okay not thank you and goodbbye", "sorry about my mistkes not thank you good bye",
-                "not thank yu good bye", "not thankyou goodbye", "okay not thank you goodby", "not thank yuo",
-                "not thank you good b", "okay not thnk", "not thank yo bye"
+                "very good thank yuo bye bye", "okay thank you and goodbbye", "sorry about my mistkes thank you good bye",
+                "thank yu good bye", "thankyou goodbye", "okay thank you goodby", "thank yuo",
+                "thank you good b", "okay thnk", "thank yo bye"
             ],
             "reqalts": [
-                "is there nothing elese", "is there nothng", "i dont want a diferent restaurant",
-                "don't give me a diffrent restaurant", "how about not portugese", "nothing elese",
-                "how about not spanih", "how about no north amrican food", "is there nothing elese", "nothing elsse"
+                "is there anything elese", "is there somethng", "i want a diferent restaurant",
+                "give me a diffrent restaurant", "how about portugese", "anything elese",
+                "how about spanih", "how about north amrican food", "is there anything elese", "anything elsse"
             ],
             "null": [
-                "not sory", "not oky", "not durtion", "not surevey", "not fere", "not sil", "system not sying hello welcome",
-                "not is", "can you nnot", "don't make a sugeston"
+                "sory", "oky", "durtion", "surevey", "fere", "sil", "system sying hello welcome",
+                "is", "cann you", "make a sugeston"
             ],
             "affirm": [
-                "not yess", "not suree", "not rigt", "not right that servs italian food", "not corect",
-                "yeah i'm not loking for a restaurant serving ksoher food", "no, i'm not loking for a cheap restaurant in the wesst part of town",
-                "not modrate price", "no not mexcian please", "no, please dont give me the address or the price rang of the restaurant"
+                "yess", "suree", "rigt", "right that servs italian food", "corect",
+                "yeah i'm loking for a restaurant serving ksoher food", "no, i'm loking for a cheap restaurant in the wesst part of town",
+                "modrate price", "no mexcian please", "no, please give me the address or the price rang of the restaurant"
             ],
             "negate": [
-                "nno", "no, i'm not loking for an expensive restaurant in the east part of town", "no thank you, not goodby",
-                "no, not asin", "no, i'm not looking for a moderatly priced restaurant that serves koshr food", "no, not a cheep restaurant in the south part of town",
-                "no, not singporean", "no, not italin food", "no, not gastropuub", "no, not hungarain"
+                "nno", "no, i'm loking for an expensive restaurant in the east part of town", "thank you, goodby",
+                "no, asin", "no, i'm looking for a moderatly priced restaurant that serves koshr food", "no, a cheep restaurant in the south part of town",
+                "no, singporean", "no, italin food", "no, gastropuub", "no, hungarain"
             ],
             "bye": [
                 "not goobye", "not bie", "okay not thank you and not goodby", "not very good thank you not goodby", "thanks but not goodby",
                 "okay forget it not goobye", "okay not goodbbye", "not goodby", "okay not good bye", "you not good bye"
             ],
             "confirm": [
-                "is there not a thia restaurant in the west part of town", "is it not in the noth part of town",
-                "is it not moderatly priced", "is it not serving vietnameese food", "is it not moderatly prced",
-                "is it not expensve", "is there not a vietnamsee restaurant", "is it not in the cnter of town",
-                "does it not serv chinese food", "is that not asain oriental type of food"
+                "is there a thia restaurant in the west part of town", "is it in the noth part of town",
+                "is it moderatly priced", "is it serving vietnameese food", "is it moderatly prced",
+                "is it expensve", "is there a vietnamsee restaurant", "is it in the cnter of town",
+                "does it serv chinese food", "is that asain oriental type of food"
             ],
             "hello": [
-                "not hhello", "not hhi", "hi, i'm not loking for a moderatly priced restaurant", "hi, i'm not loking for a cheap restaurant in the south part of town",
-                "hi, i'm not looking for mexcian food", "hi, i'm not loking for an expensive restaurant in the south part of town",
-                "hello and not welcom", "hi, i'm not loking for a restaurant in the cnter that serves korean food",
-                "hello, i'm not loking for an expensive restaurant", "hello, hello, and not welcom to cambridge"
+                "hhello", "hhi", "hi, i'm loking for a moderatly priced restaurant", "hi, i'm loking for a cheap restaurant in the south part of town",
+                "hi, i'm looking for mexcian food", "hi, i'm loking for an expensive restaurant in the south part of town",
+                "hello and welcom", "hi, i'm loking for a restaurant in the cnter that serves korean food",
+                "hello, i'm loking for an expensive restaurant", "hello, hello, and welcom to cambridge"
             ],
             "repeat": [
-                "dont go bback", "can't repat that", "don't rept that", "okay, don't let me try this agian", 
-                "not agian please", "not agin", "dont rept", "can't repet", "could you not repat that", 
-                "pleas don't repat"
+                "go bback", "can repat that", "repet that", "okay, let me try this agian", 
+                "agian please", "agin", "replt", "can repet", "could you repat that", 
+                "pleas repat"
             ],
             "ack": [
-                "kay, what's not the adderss", "okay uh, can i nnot", "breth, okay, how about not thia food",
-                "not fne", "well, dont take that one", "okay uh nnot", "okay um, nnot", "okay, can you not give me anther restaurant",
-                "not kayy", "not kay umm"
+                "kay, what's the adderss", "okay uh, can i", "breth, okay, how about thia food",
+                "not fne", "well, take that one", "okay uh", "okay um", "okay, can you give me anther restaurant",
+                "kayy", "kay umm"
             ],
             "deny": [
-                "i dont want vietnamesse food", "no, not indian but yes scandianvian food", "not ritght",
-                "i dont want turkih", "i dont want tht", "i dont want european fuision",
-                "i dont want thaat", "can you not chnge romanian food to something elese",
-                "no, i wnat chinese, not thia food", "no, i wnat chinese, not thi food"
+                "i want vietnamesse food", "no, indian but yes scandianvian food", "ritght",
+                "i want turkih", "i want tht", "i want european fuision",
+                "i want thaat", "can you chnge romanian food to something elese",
+                "i wnat chinese, thia food", "no, i wnat chinese, thi food"
             ],
             "restart": [
-                "can we not strat over", "okay, dont start ovr", "oh jesus chrsit, don't strat over", "dont start agian",
-                "dont start ovr", "uh, don't strat over", "dont reest", "okay, dont reeset", "let's not strat over", "can you not reset evrything"
+                "can we strat over", "okay, start ovr", "oh jesus chrsit, strat over", "start agian",
+                "start ovr", "uh, strat over", "reest", "okay, reeset", "let's strat over", "can you reset evrything"
             ],
             "reqmore": [
-                "no moer", "more detials", "more inof", "more plese", "tell me mre",
+                "moer", "more detials", "more inof", "more plese", "tell me mre",
                 "give mroe", "more info nwo", "need mroe", "more optons", "more sugestions"
             ]
         }
