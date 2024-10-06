@@ -97,6 +97,25 @@ class Helpers:
         If no restaurant is found, it moves to the InformThatThereIsNoRestaurant and returns a system utterance that tells that.
         If a restaurant is found it moves into the GiveRestaurantRecommendation state and tells the user which restaurant is found and why.
         """
+       
+        if(state.additional_requirements["romantic"] == "romantic") and (state.additional_requirements["assignedseats"] == "assignedseats"):
+            state.current_state = "AskForMissingInfo1"
+            state.additional_requirements = {
+            "touristic": "",
+            "romantic": "",
+            "children": "",
+            "assignedseats": "",
+            }
+            return "Sorry but you can not choose a restaurant with both those requirement together (romantic and a assigned seat), can you change your requirement please"
+        if(state.additional_requirements["romantic"] == "romantic") and (state.additional_requirements["children"] == "children"):
+            state.current_state = "AskForMissingInfo1"
+            state.additional_requirements = {
+            "touristic": "",
+            "romantic": "",
+            "children": "",
+            "assignedseats": "",
+            }
+            return "Sorry but you can not choose  a restaurant with both those requirement together (romantic and a children-friendly), can you change your requirement please"
         # First find the restaurants based on the user preferences
         Helpers.find_restaurants1(state)
 
@@ -416,7 +435,7 @@ class Helpers:
         Extract preferences (romantic, children, assignedseats, touristic) from user_input and put in state.additional_requirements
         """
         keys = ["touristic", "romantic", "children", "assignedseats"]
-        result = {key: "any" for key in keys}
+        result = state.additional_requirements
         user_input = user_input.lower()
 
         keywords_2 = {
@@ -441,7 +460,7 @@ class Helpers:
                         result[key] = word
                     break
         for key, value in result.items():
-            if value == "any":
+            if value == "":
                 for word in keywords_2[key]:
                     matches = difflib.get_close_matches(word, input_words, cutoff=0.8)
                     if matches:
@@ -451,6 +470,9 @@ class Helpers:
         if result["assignedseats"] in ["assigned seats", "reservation"]:
             result["assignedseats"] = "assignedseats"
 
+        for key, value in result.items():
+            if value == "":
+                result[key] = "any"
         state.additional_requirements = result
 
     @staticmethod
@@ -833,7 +855,7 @@ class Dialog_Acts:
         """
 
         system_utterance = state.last_system_utterance
-
+        Helpers.extract_additional_requirements(state,user_input)
         if state.current_state == "InformThatThereIsNoRestaurant":
             Helpers.extract_preferences(state, user_input, True)
             system_utterance = state.last_system_utterance
@@ -843,9 +865,14 @@ class Dialog_Acts:
             system_utterance = Helpers.communicate_found_restaurant(state)
 
         elif state.current_state == "GiveRestaurantRecommendation":
+            Helpers.find_restaurants1(state)
+            state.filtered_restaurants = Helpers.apply_rules(
+            state.found_restaurants1, state.additional_requirements
+        )
+   
             # Remove the current found restaurant from the list
-            del state.filtered_restaurants[0]
-
+            if len(state.filtered_restaurants) > 0:
+                del state.filtered_restaurants[0]
             # and provide another restaurant
             if not state.filtered_restaurants:
                 state.current_state = "InformThatThereIsNoRestaurant"
