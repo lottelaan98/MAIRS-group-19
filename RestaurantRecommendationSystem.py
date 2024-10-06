@@ -15,9 +15,9 @@ from Baseline2 import Baseline2
 #############################        CHANGE THE PATH TO MATCH YOUR COMPUTER           #############################
 ##################################################################################################################
 
-file_path_restaurants = "/Users/youssefbenmansour/Desktop/MAIRS-group-19/restaurant_info2.csv"
+file_path_restaurants = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\restaurant_info2.csv"
 
-file_path_dialog = "/Users/youssefbenmansour/Desktop/MAIRS-group-19/dialog_acts.dat"
+file_path_dialog = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
 
 allow_dialog_restarts: bool = True
 use_delay: bool = False
