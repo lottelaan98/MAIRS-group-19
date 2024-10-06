@@ -237,7 +237,7 @@ class Helpers:
         """
         state.current_state = "AskForAdditionalRequirements"
         if all(value == "" for value in state.additional_requirements.values()):
-            return "Are there any additional preferences you'd like to specify such as romantic atmosphere,requiring a reservation, or being child-friendly?"
+            return "Are there any additional preferences you'd like to specify such as romantic atmosphere, requiring a reservation, or being child-friendly?"
         # Elif to handle partially missing values
         elif any(value == "" for value in state.additional_requirements.values()):
             missing_requirements = [
@@ -783,10 +783,10 @@ class Dialog_Acts:
         if state.current_state == "AskForAdditionalRequirements":
             return Helpers.communicate_found_restaurant(state)
 
-        if state.current_state == "Welcome":
-            # System moves to State AskForMissingInfo
-            system_utterance = Helpers.ask_for_missing_info1(state)
-        elif state.current_state == "AskForMissingInfo1":
+        if (
+            state.current_state == "AskForMissingInfo1"
+            or state.current_state == "Welcome"
+        ):
             result = Helpers.perform_levenshtein(user_input)
 
             if result is not None:
@@ -798,6 +798,9 @@ class Dialog_Acts:
                     system_utterance = f"Did you say you are looking for a restaurant in the {word} price range?"
                 elif key == "food":
                     system_utterance = f"Did you say you are looking for a restaurant that serves {word} food?"
+            if result is None and state.current_state == "Welcome":
+                # System moves to State AskForMissingInfo
+                system_utterance = "I'm sorry, I did not get that. Please give your preferences for area, price range and food type. "
         elif state.current_state == "AskUserForClarification":
             Helpers.fix_ambiguity(state, user_input)
             if state.ambiguity == {}:
