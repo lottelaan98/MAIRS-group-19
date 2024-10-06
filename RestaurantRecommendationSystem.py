@@ -143,7 +143,7 @@ class SystemDialog:
             return self.acts.thankyou(self.state, user_input)
 
     def dialog_system(self):
-        self.state.last_system_utterance = "Hello, welcome to the UU restaurant system! You can ask for restaurants by area, price range or food type. How may I help you?"
+        self.state.last_system_utterance = "System: Hello, welcome to the UU restaurant system! You can ask for restaurants by area, price range or food type. How may I help you?"
 
         # Print the welcome text
         if output_in_caps:
