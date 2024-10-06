@@ -128,9 +128,7 @@ class Baseline2:
 
     def train_and_test(self, x, y):
         y_pred = []
-        x_train, x_test, y_train, y_test = train_test_split(
-            x, y, test_size=0.15, random_state=42
-        )
+        _, x_test, _, y_test = train_test_split(x, y, test_size=0.15, random_state=42)
 
         # Classify each utterance in the test set
         for sentence in x_test:

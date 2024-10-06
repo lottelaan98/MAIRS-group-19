@@ -92,6 +92,11 @@ class Helpers:
 
     @staticmethod
     def communicate_found_restaurant(state) -> str:
+        """
+        First finds the restaurants that meet the user preferences, then filters these restaurants based on the additional requirements.
+        If no restaurant is found, it moves to the InformThatThereIsNoRestaurant and returns a system utterance that tells that.
+        If a restaurant is found it moves into the GiveRestaurantRecommendation state and tells the user which restaurant is found and why.
+        """
         # First find the restaurants based on the user preferences
         Helpers.find_restaurants1(state)
 
@@ -477,8 +482,6 @@ class Helpers:
 
         # Use Levenshtein algorithm if no matches found
         if not preference_extracted:
-            # TODO: HIJ CHECK NU OF DICTIONARY AL EEN WAARDE HEEFT. GEEF ANDER IF-STATEMENT
-            # TODO: HOUD REKENING MET
             result = Helpers.perform_levenshtein(user_input)
             if result is not None:
                 key, word = result
@@ -501,7 +504,12 @@ class Helpers:
 
     @staticmethod
     def ask_user_for_clarification(state):
-        """ """
+        """
+        Looks into the state.ambiguity dictionary, and asks the user for which `key` he would like which value.
+        For example:
+        'For the food preference, would you like british or romanian?'
+        'For the pricerange preference, would you like cheap or expensive?'
+        """
         key = list(state.ambiguity.keys())[0]
         possible_values = state.ambiguity[key]
         return f"For the {key} preference, would you like {possible_values[0]} or {possible_values[1]}?"
@@ -523,7 +531,7 @@ class Helpers:
                 break
 
     @staticmethod
-    def provide_contact_info(restaurant):
+    def provide_all_contact_info(restaurant):
         return f"The restaurant {restaurant.name} is on {restaurant.address} with post code {restaurant.postcode}. This is their phone number: {restaurant.phone}"
 
 
@@ -531,13 +539,14 @@ class Dialog_Acts:
 
     def ack(self, state):
         """
-        Als het bij request info zit: geef alle informatie
-        Als het bij restaurantRecommendation zit: Geef een andere recommendation
-
+        When in ProvideContactInformation: Provide all contact information
+        When in GiveRestaurantRecommendation: If there is one, give another recommendation based on the state.found_restaurants list.
         """
         system_utterance = state.last_system_utterance
         if state.current_state == "ProvideContactInformation":
-            system_utterance = Helpers.provide_contact_info(state.found_restaurants1[0])
+            system_utterance = Helpers.provide_all_contact_info(
+                state.found_restaurants1[0]
+            )
         elif state.current_state == "GiveRestaurantRecommendation":
             system_utterance = self.reqmore(state)
         else:
@@ -691,7 +700,7 @@ class Dialog_Acts:
 
         If the user negated the question of the additional requirements, put 'any' in the additional requirements.
 
-        If the usesr negated the second confirmation, ask again.
+        If the user negated the second confirmation, ask again.
 
         """
         system_utterance = state.last_system_utterance
@@ -821,7 +830,7 @@ class Dialog_Acts:
                 state.current_state = "InformThatThereIsNoRestaurant"
                 system_utterance = "Sorry, I couldn't find another restaurant that matches your preferences. Can you change your requirements?"
                 words = user_input.lower().split()
-                for category, keywords in keywords_2.items():
+                for _, keywords in keywords_2.items():
                     if any(keyword in words for keyword in keywords):
                         state.current_state = "AskForAdditionalRequirements"
             else:
@@ -842,27 +851,6 @@ class Dialog_Acts:
             state.currently_selected_restaurant = random.choice(other_recommendations)
             system_utterance = Helpers.sell_restaurant(state)
         return system_utterance
-
-    """
-    def request(self, state, user_input):
-        output_text = ""
-        if "address" in user_input:
-            output_text = f"The address of {state.currently_selected_restaurant.name} is on {state.currently_selected_restaurant.address}. "
-        if "post" in user_input:
-            output_text = (
-                output_text
-                + f"The post code of  {state.currently_selected_restaurant.name} is {state.currently_selected_restaurant.postcode}. "
-            )
-        if "phone" in user_input:
-            output_text = (
-                output_text
-                + f"The phone number of {state.currently_selected_restaurant.name} is {state.currently_selected_restaurant.phone}."
-            )
-        if output_text == "":
-            return "Can you repeat that please?"
-
-        return output_text
-    """
 
     def request(self, state, user_input):
         def get_closest_word(user_input, target_words, threshold=1):
@@ -892,18 +880,22 @@ class Dialog_Acts:
         return output_text
 
     def restart(self, state, allowed):
+        """
+        If it is allowed, it will reset all the values in the state to the starting values and it returns a new system utterance,
+        where it mentions that the system has started over.
+        """
         if allowed:
-            self.current_state = "Welcome"
-            self.user_preferences = {}
-            self.still_needed_info: list[str] = ["area", "food", "pricerange"]
-            self.dialog_acts = Dialog_Acts()
-            self.helpers = Helpers()
+            state.current_state = "Welcome"
+            state.user_preferences = {}
+            state.still_needed_inf = ["area", "food", "pricerange"]
+            state.dialog_acts = Dialog_Acts()
+            state.helpers = Helpers()
             state.last_system_utterance = "Okay. We start over. Welcome to the UU restaurant system! You can ask for restaurants by area, price range or food type. How may I help you?"
-            self.ambiguity = {}
-            self.found_restaurants1 = []
-            self.filtered_restaurants = []
-            self.currently_selected_restaurant: Restaurant = None
-            self.additional_requirements = {
+            state.ambiguity = {}
+            state.found_restaurants1 = []
+            state.filtered_restaurants = []
+            state.currently_selected_restaurant = None
+            state.additional_requirements = {
                 "touristic": "",
                 "romantic": "",
                 "children": "",

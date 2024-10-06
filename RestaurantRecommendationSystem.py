@@ -110,7 +110,7 @@ class SystemDialog:
 
         return predicted_class
 
-    def perform_dialog_act(self, predicted_class, user_input):
+    def state_transition(self, predicted_class, user_input):
         if predicted_class == "ack":
             return self.acts.ack(self.state)
         elif predicted_class == "affirm":
@@ -157,7 +157,7 @@ class SystemDialog:
 
             # Predict class and perform actions based on this.
             predicted_class = self.classify(user_input)
-            system_utterance = self.perform_dialog_act(predicted_class, user_input)
+            system_utterance = self.state_transition(predicted_class, user_input)
             self.state.last_system_utterance = system_utterance
 
             # Insert delay if use_delay is True
