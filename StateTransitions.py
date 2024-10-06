@@ -110,20 +110,7 @@ keywords = {
     ],
 }
 
-
-
-class Restaurant:
-    def __init__(self, name, area, pricerange, food, address, postcode, phone):
-        self.name = name
-        self.area = area
-        self.pricerange = pricerange
-        self.food = food
-        self.address = address
-        self.postcode = postcode
-        self.phone = phone
-
-
-keywords = {
+keywords_1 = {
     "pricerange": ["cheap", "moderate", "moderately", "expensive"],
     "area": ["north", "south", "east", "west", "center"],
     "food": [
@@ -168,6 +155,19 @@ keywords = {
         "vietnamese",
     ],
 }
+
+
+class Restaurant:
+    def __init__(self, name, area, pricerange, food, address, postcode, phone):
+        self.name = name
+        self.area = area
+        self.pricerange = pricerange
+        self.food = food
+        self.address = address
+        self.postcode = postcode
+        self.phone = phone
+
+
 
 
 class Helpers:
@@ -221,7 +221,6 @@ class Helpers:
             
             # print(input_list)
             # Return the name of the first matching restaurant
-            state.secondary_preference['touristic'] = 'touristic'
             state.found_restaurants = Helpers.apply_rules(input_list, state.secondary_preference)
             if len(state.found_restaurants) == 0 :
                 state.current_state = "InformThatThereIsNoRestaurant"
@@ -520,6 +519,8 @@ class Helpers:
 
 class Dialog_Acts:
 
+
+
     def ack(self, state):
         """
         Als het bij request info zit: geef alle informatie
@@ -649,7 +650,7 @@ class Dialog_Acts:
         user_input,
         (
             state.current_state == "InformThatThereIsNoRestaurant"
-            or state.current_state == "Welcome"
+            or state.current_state == "Welcome" or  state.current_state == "AskForConfirmation1"
         ),
             )
         if state.current_state == "AskForMissingInfo2":
@@ -678,10 +679,8 @@ class Dialog_Acts:
 
     def negate(self, state, user_input) -> str:
         system_utterance = state.last_system_utterance
-        if (
-            state.current_state == "AskForConfirmation1"
-            or state.current_state == "AskForMissingInfo1"
-        ):
+        print(state.current_state )
+        if (state.current_state == "AskForConfirmation1" or state.current_state == "AskForMissingInfo1"):
             previous_preferences = state.user_preferences
             Helpers.extract_preferences(state, user_input, True)
             if previous_preferences == state.user_preferences:
@@ -693,6 +692,18 @@ class Dialog_Acts:
                 )
             else:
                 system_utterance = Helpers.ask_for_confirmation1(state)
+        elif (state.current_state == "AskForConfirmation2" or state.current_state == "AskForMissingInfo2"):
+            previous_preferences = state.user_preferences
+            Helpers.extract_second_preferences(state, user_input)
+            if previous_preferences == state.secondary_preference: 
+                # When the user didn't state what he wants to change, remove all preferences and ask again.
+                state.secondary_preference  = {'touristic': '' ,'romantic': '' ,'children': '' ,'assignedseats': '' }
+                system_utterance = (
+                    "I'm sorry. What is your preference for romantic, children-friendly, reservation required ?"
+                )
+            else:
+                system_utterance = Helpers.ask_for_confirmation2(state)
+
         return system_utterance
     
     
@@ -756,17 +767,25 @@ class Dialog_Acts:
         1 vanuit InformThatThereIsNoRestaurant -> How about.... -> find_restaurants
         1 vanuit GiveRestaurantRecommendation -> Verwijder eerste uit de restaurants list en geef de nieuwe nummer 1
         """
+        
 
-
-        def detect_unlisted_keywords():
+        def detect_unlisted_keywords1():
             words = user_input.split()  # Split the sentence into words
-
-    # Iterate over each word in the user input
             for word in words:
-                for category in keywords:
+                for category in keywords_1:
             # If the word is found in the keywords of any category and not in preferences
-                    if word in keywords[category] and word not in state.user_preferences:
+                    if word in keywords_1[category] and word not in state.user_preferences:
                         state.user_preferences[category]=word
+                        return True
+
+            return False
+        def detect_unlisted_keywords2():
+            words = user_input.split()  # Split the sentence into words
+            for word in words:
+                for category in keywords_2:
+            # If the word is found in the keywords of any category and not in preferences
+                    if word in keywords_2[category] and word not in state.secondary_preference:
+                        state.secondary_preference[category]=word
                         return True
 
             return False
@@ -774,11 +793,11 @@ class Dialog_Acts:
 
         system_utterance = state.last_system_utterance
 
-        if detect_unlisted_keywords():
-            print("Hellloo")
+        if detect_unlisted_keywords1() == False and detect_unlisted_keywords2() == False :
+            Helpers.extract_preferences(state, user_input, True)
+            Helpers.extract_second_preferences(state,user_input)
             state.found_restaurants = []
             system_utterance = Helpers.find_restaurant(state)
-            print(system_utterance)
 
         elif state.current_state == "GiveRestaurantRecommendation":
             Helpers.extract_preferences(state, user_input, True)
@@ -798,7 +817,7 @@ class Dialog_Acts:
                 system_utterance = Helpers.sell_restaurant(
                     state.currently_selected_restaurant
                 )
-
+        print(state.secondary_preference,"  ", state.user_preferences)
         return system_utterance
 
     def reqmore(self, state):
@@ -814,6 +833,7 @@ class Dialog_Acts:
             system_utterance = Helpers.sell_restaurant(
                 state.currently_selected_restaurant
             )
+        print(state.secondary_preference,"  ", state.user_preference)
         return system_utterance
 
     '''
