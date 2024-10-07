@@ -7,17 +7,13 @@ import pandas as pd
 import time
 from Baseline2 import Baseline2
 
-
-# Download the words dataset if not already available
-# nltk.download("words")
-
 ##################################################################################################################
 #############################        CHANGE THE PATH TO MATCH YOUR COMPUTER           #############################
 ##################################################################################################################
 
-file_path_restaurants = "/Users/youssefbenmansour/Desktop/MAIRS-group-19/restaurant_info2.csv"
+file_path_restaurants = "YOUR_FILE_PATH\\restaurant_info2.csv"
 
-file_path_dialog = "/Users/youssefbenmansour/Desktop/MAIRS-group-19/dialog_acts.dat"
+file_path_dialog = "YOUR_FILE_PATH\\dialog_acts.dat"
 
 allow_dialog_restarts: bool = True
 use_delay: bool = False

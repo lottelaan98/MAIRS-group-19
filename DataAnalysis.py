@@ -1,14 +1,15 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
-from collections import Counter
 from Baseline1 import Baseline1
 from Baseline2 import Baseline2
 from SVM import SVM
 from RandomForest import RandomForest
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import classification_report
 
-file_path_dialog = "/Users/llaan6/OneDrive - UMC Utrecht/Documenten/GitHub/MAIRS-group-19/dialog_acts.dat"
+##################################################################################################################
+#############################        CHANGE THE PATH TO MATCH YOUR COMPUTER           #############################
+##################################################################################################################
+
+file_path_dialog = "YOUR_FILE_PATH\\dialog_acts.dat"
 
 
 def load_data_dialog() -> pd.DataFrame:
