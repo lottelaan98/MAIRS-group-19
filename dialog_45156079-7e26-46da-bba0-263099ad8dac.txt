@@ -1,0 +1,78 @@
+Dialog ID: 45156079-7e26-46da-bba0-263099ad8dac
+Turn Index: 24
+Transparency Level: 2
+
+System: Hello, welcome to the UU restaurant system! You can ask for restaurants by area, price range or food type. How may I help you?
+State = Welcome
+Me: heyy
+System: I'm sorry, I did not get that. Please give your preferences for area, price range and food type. 
+State = Welcome
+Me: european
+System: What part of town do you have in mind?
+State = AskForMissingInfo
+Me: any
+System: Would you like something in the cheap, moderate, or expensive price range?
+State = AskForMissingInfo
+Me: centre
+System: For the area preference, would you like any or centre?
+State = AskUserForClarification
+Me: centre
+System: Your choice for area is now set to: centre. Would you like something in the cheap, moderate, or expensive price range?
+State = AskForMissingInfo
+Me: cheap
+System: Let me confirm, you are looking for an european restaurant in the centre of town in the cheap price range, right?
+State = AskForConfirmation1
+Me: yes
+System: Are there any additional preferences you'd like to specify such as romantic atmosphere, requiring a reservation, or being child-friendly?
+State = AskForAdditionalRequirements
+Me: romantic
+System: To clarify, you prefer a restaurant with these qualities:  Romantic.
+State = AskForConfirmation2
+Me: yes
+System: Sorry, I couldn't find a cheap european restaurant in the centre. Please change your requirements.
+State = InformThatThereIsNoRestaurant
+Me: not romantic
+System: Let me confirm, you are looking for an european restaurant in the centre of town in the cheap price range, right?
+State = AskForConfirmation1
+Me: yes
+System: Which additional preferences would you like to specify such as romantic atmosphere, requiring a reservation, or being child-friendly?
+State = AskForAdditionalRequirements
+Me: not romantic
+System: To clarify, you prefer a restaurant with these qualities:  Romantic.
+State = AskForConfirmation2
+Me: no
+System: Which additional preferences would you like to specify such as romantic atmosphere, requiring a reservation, or being child-friendly?
+State = AskForAdditionalRequirements
+Me: child-freindly
+System: Sorry, I couldn't find a cheap european restaurant in the centre. Please change your requirements.
+State = InformThatThereIsNoRestaurant
+Me: uhm okay
+System: I am sorry. Could you please rephrase that?
+State = InformThatThereIsNoRestaurant
+Me: chinese any price
+System: Let me confirm, you are looking for a chinese restaurant in the centre of town in the cheap price range, right?
+State = AskForConfirmation1
+Me: no, cheap
+System: I'm sorry. What is your preference for food, price range and area?
+State = AskForConfirmation1
+Me: any pricerange
+System: What part of town do you have in mind?
+State = AskForMissingInfo
+Me: centre
+System: What kind of food would you like?
+State = AskForMissingInfo
+Me: chinese
+System: Let me confirm, you are looking for a chinese restaurant in the centre of town and you don't care about the price range, right?
+State = AskForConfirmation1
+Me: yes
+System: Which additional preferences would you like to specify such as romantic atmosphere, requiring a reservation, or being child-friendly?
+State = AskForAdditionalRequirements
+Me: romantic
+System: To clarify, you prefer a restaurant with these qualities:  Romantic.
+State = AskForConfirmation2
+Me: yes
+System: I recommend charlie chan in the centre area, serving chinese cuisine, with cheap prices.  The restaurant is romantic because it allows you to stay for a long time.  The restaurant charlie chan was not chosen, because it does not meet your additional requirements  Romantic Let me know if you need the post code, address or phone number.
+State = GiveRestaurantRecommendation
+Me: bye
+System: Goodbye! Enjoy your meal!
+State = End

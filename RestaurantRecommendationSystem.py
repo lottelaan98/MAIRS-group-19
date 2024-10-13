@@ -6,19 +6,31 @@ from StateTransitions import keywords_1
 import pandas as pd
 import time
 from Baseline2 import Baseline2
+import random
+import uuid
 
 ##################################################################################################################
 #############################        CHANGE THE PATH TO MATCH YOUR COMPUTER           #############################
 ##################################################################################################################
 
-file_path_restaurants = "YOUR_FILE_PATH\\restaurant_info2.csv"
+file_path_restaurants = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\Part 2\\MAIRS-group-19\\MAIRS-group-19\\restaurant_info2.csv"
 
-file_path_dialog = "YOUR_FILE_PATH\\dialog_acts.dat"
+file_path_dialog = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\Part 2\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
 
 allow_dialog_restarts: bool = True
 use_delay: bool = False
 output_in_caps: bool = False
 use_baseline_as_classifier: bool = False
+
+# Give a random transparency level. If you want to test it, manually set it to transparency of 0, 1 or 2
+transparency_level = random.randint(0, 2)
+"""
+    Transparency levels are about the recommendation of the system:
+    0 = System utterance consists of the restaurant only.
+    1 = System utterance consists of the currently selected restaurant and why we choose that
+    2 = System utterance consists of the currently selected restaurant, why we choose that and why we did not choose the others.
+
+"""
 
 
 def load_data() -> pd.DataFrame:
@@ -38,7 +50,7 @@ class SystemDialog:
         self.random_forest = self.train_random_forest_classifier()
         # Access vectorizer after initialization
         self.vectorizer = self.random_forest.vectorizer
-        self.state = StateTransitions.State(file_path_restaurants)
+        self.state = StateTransitions.State(file_path_restaurants, transparency_level)
         self.acts = StateTransitions.Dialog_Acts()
         self.turn_index = 0
         self.baseline2 = Baseline2(self.dataset)
@@ -107,6 +119,7 @@ class SystemDialog:
         return predicted_class
 
     def state_transition(self, predicted_class, user_input):
+        self.turn_index += 1
         if predicted_class == "ack":
             return self.acts.ack(self.state)
         elif predicted_class == "affirm":
@@ -146,10 +159,14 @@ class SystemDialog:
             self.state.last_system_utterance = self.state.last_system_utterance.upper()
 
         print(self.state.last_system_utterance)
+        # Create dialog_log to be able to save the dialog later
+        dialog_log = [self.state.last_system_utterance]
+        dialog_log.append(f"State = {self.state.current_state}")
 
         # Do the rest of the dialog
         while self.state.current_state != "End":
             user_input = input("Me: ").lower()
+            dialog_log.append(f"Me: {user_input}")
 
             # Predict class and perform actions based on this.
             predicted_class = self.classify(user_input)
@@ -165,6 +182,26 @@ class SystemDialog:
                 system_utterance = system_utterance.upper()
 
             print("System: ", system_utterance)
+            dialog_log.append(f"System: {system_utterance}")
+            dialog_log.append(f"State = {self.state.current_state}")
+
+        self.save_dialog(dialog_log)
+
+    def save_dialog(self, dialog_log):
+        dialog_id = uuid.uuid4()
+        filename = f"dialog_{dialog_id}.txt"
+
+        # Open het bestand en schrijf de dialoog erin
+        with open(filename, "w") as f:
+            f.write(f"Dialog ID: {dialog_id}\n")
+            f.write(f"Turn Index: {self.turn_index}\n")
+            f.write(f"Transparency Level: {transparency_level}\n\n")
+
+            # Schrijf alle dialoogregels naar het bestand
+            for line in dialog_log:
+                f.write(line + "\n")
+
+        print(f"Dialog saved to {filename}")
 
 
 system_dialog = SystemDialog()
