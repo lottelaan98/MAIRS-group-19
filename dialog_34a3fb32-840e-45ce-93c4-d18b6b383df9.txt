@@ -1,0 +1,39 @@
+Dialog ID: 34a3fb32-840e-45ce-93c4-d18b6b383df9
+Turn Index: 11
+Transparency Level: 2
+
+System: Hello, welcome to the UU restaurant system! You can ask for restaurants by area, price range or food type. How may I help you?
+State = Welcome
+Me: chinese cheap
+System: What part of town do you have in mind?
+State = AskForMissingInfo
+Me: any
+System: Let me confirm, you are looking for a chinese restaurant in any area in the cheap price range, right?
+State = AskForConfirmation1
+Me: yes
+System: Which additional preferences would you like to specify such as romantic atmosphere, requiring a reservation, or being child-friendly?
+State = AskForAdditionalRequirements
+Me: romantic
+System: To clarify, you prefer a restaurant with these qualities: romantic.
+State = AskForConfirmation2
+Me: yes
+System: Sorry, I couldn't find a cheap chinese restaurant in any area with these qualities: romantic. The restaurants the missing sock, rice house, the lucky star, are cheap chinese restaurants in any area, but they do not meet your additional requirement(s): romantic. Please change your requirements.
+State = InformThatThereIsNoRestaurant
+Me: okay uhm
+System: I am sorry. Could you please rephrase that?
+State = InformThatThereIsNoRestaurant
+Me: how
+System: Let me confirm, you are looking for a chinese restaurant in any area in the cheap price range, right?
+State = AskForConfirmation1
+Me: yes
+System: Which additional preferences would you like to specify such as romantic atmosphere, requiring a reservation, or being child-friendly?
+State = AskForAdditionalRequirements
+Me: nothing
+System: I recommend the missing sock in the south area, serving chinese cuisine, with cheap prices.   Let me know if you need the post code, address or phone number.
+State = GiveRestaurantRecommendation
+Me: anything else
+System: I recommend rice house in the south area, serving chinese cuisine, with cheap prices.   Let me know if you need the post code, address or phone number.
+State = GiveRestaurantRecommendation
+Me: bye
+System: Goodbye! Enjoy your meal!
+State = End

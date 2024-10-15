@@ -7,15 +7,17 @@ import difflib
 ##################################################################################################################
 #############################        CHANGE THE PATH TO MATCH YOUR COMPUTER           #############################
 ##################################################################################################################
-def print_restaurants(label, restaurants_list):
-    print(f"{label}:")
-    if not restaurants_list:
-        print("No restaurants in this list.")
-    else:
-        for restaurant in restaurants_list:
-            print(
-                f"- {restaurant.name} ({restaurant.area}, {restaurant.pricerange}, {restaurant.food}, {restaurant.crowdedness}, {restaurant.length_of_stay}, {restaurant.food_quality} )"
-            )
+
+# For debugging purposes:
+# def print_restaurants(label, restaurants_list):
+#     print(f"{label}:")
+#     if not restaurants_list:
+#         print("No restaurants in this list.")
+#     else:
+#         for restaurant in restaurants_list:
+#             print(
+#                 f"- {restaurant.name} ({restaurant.area}, {restaurant.pricerange}, {restaurant.food}, {restaurant.crowdedness}, {restaurant.length_of_stay}, {restaurant.food_quality} )"
+#             )
 
 
 keywords_2 = {
@@ -193,18 +195,10 @@ class Helpers:
         Input is a list of possible restaurants and additional requirements.
         Output is a list of restaurants that meet the aditional requirements.
         """
-        print("These are possible restaurants: ")
-        for restaurant in possible_restaurants:
-            print(restaurant.name, restaurant.length_of_stay, restaurant.crowdedness)
-
-        print("These are the additional requirements: ", additional_requirements)
         filtered_restaurants: list[Restaurant] = possible_restaurants
-
-        print(print_restaurants("filtered restaurants 1: ", filtered_restaurants))
 
         # Filter for touristic restaurants: cheap, good or excellent food quality, food type not romanian
         if additional_requirements["touristic"] == "touristic":
-            print("in the touristic one")
             filtered_restaurants = [
                 restaurant
                 for restaurant in filtered_restaurants
@@ -214,7 +208,6 @@ class Helpers:
             ]
         # Filter for not touristic restaurants: not cheap and good or excellent food quality
         elif additional_requirements["touristic"] == "not touristic":
-            print("in the not touristic one")
             filtered_restaurants = [
                 restaurant
                 for restaurant in filtered_restaurants
@@ -223,8 +216,6 @@ class Helpers:
                     and restaurant.food_quality in ["good", "excellent"]
                 )
             ]
-
-        print(print_restaurants("filtered restaurants 2: ", filtered_restaurants))
 
         # Filter for assigned seats: restaurants that are busy
         if additional_requirements["assignedseats"] == "assignedseats":
@@ -236,7 +227,6 @@ class Helpers:
 
         # Filter for child-friendly: restaurants where the stay is not long
         if additional_requirements["children"] != "any":
-            print("FILTER VOOR KINDEREN")
             filtered_restaurants = [
                 restaurant
                 for restaurant in filtered_restaurants
@@ -338,8 +328,6 @@ class Helpers:
             "assignedseats": "any",
         }
 
-        print("KOEOKJES", preferences_string_list)
-
         if preferences_string_list:
             string_part_2 = (
                 f" with these qualities: {', '.join(preferences_string_list)}. "
@@ -383,11 +371,6 @@ class Helpers:
                     f.name == restaurant.name for f in state.filtered_restaurants
                 )
             ]
-
-            # Print de filtered_restaurants, found_restaurants1 en not_selected_restaurants
-            print_restaurants("Filtered Restaurants", state.filtered_restaurants)
-            print_restaurants("Found Restaurants", state.found_restaurants1)
-            print_restaurants("Not Selected Restaurants", not_selected_restaurants)
 
             if not not_selected_restaurants:
                 return ""
@@ -509,7 +492,6 @@ class Helpers:
         # List to store preferences
         preferences = []
 
-        print("IN CREATE ADDITIONAL PREFERENCES", additional_requirements)
         # Check each preference and append the non-empty ones
         if additional_requirements["touristic"] != "any":
             preferences.append(f"{additional_requirements['touristic']}")
@@ -520,7 +502,6 @@ class Helpers:
         if additional_requirements["assignedseats"] != "any":
             preferences.append(f"with {additional_requirements['assignedseats']}")
 
-        print("final preferences: ", preferences)
         return preferences
 
     @staticmethod
@@ -581,13 +562,11 @@ class Helpers:
                 if word in user_input:
                     word_idx = user_input.find(word)
                     negated = any(neg in user_input[:word_idx] for neg in negations)
-                    print("negated = ", negated, "result = ", result, "key = ", key)
 
                     if negated:
                         result[key] = f"not {word}"
                     else:
                         result[key] = word
-                    print("result after: ", result)
                     break
         for key, value in result.items():
             if value == "":
@@ -995,11 +974,6 @@ class Dialog_Acts:
             system_utterance = Helpers.communicate_found_restaurant(state)
 
         elif state.current_state == "GiveRestaurantRecommendation":
-            Helpers.find_restaurants1(state)
-            state.filtered_restaurants = Helpers.apply_rules(
-                state.found_restaurants1, state.additional_requirements
-            )
-
             # Remove the current found restaurant from the list
             if len(state.filtered_restaurants) > 0:
                 del state.filtered_restaurants[0]
@@ -1020,13 +994,12 @@ class Dialog_Acts:
     def reqmore(self, state):
         other_recommendations = [
             restaurant
-            for restaurant in state.found_restaurants1
+            for restaurant in state.filtered_restaurants
             if restaurant.name != state.currently_selected_restaurant.name
         ]
         if not other_recommendations:
             system_utterance = f"The restaurant {state.currently_selected_restaurant.name} is the only restaurant that meets your preferences."
         else:
-            print("in reqmore als er nog andere recommendations zijn")
             state.currently_selected_restaurant = random.choice(other_recommendations)
             system_utterance = Helpers.sell_restaurant(state)
         return system_utterance
