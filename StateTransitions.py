@@ -8,16 +8,17 @@ import difflib
 #############################        CHANGE THE PATH TO MATCH YOUR COMPUTER           #############################
 ##################################################################################################################
 
+
 # For debugging purposes:
-# def print_restaurants(label, restaurants_list):
-#     print(f"{label}:")
-#     if not restaurants_list:
-#         print("No restaurants in this list.")
-#     else:
-#         for restaurant in restaurants_list:
-#             print(
-#                 f"- {restaurant.name} ({restaurant.area}, {restaurant.pricerange}, {restaurant.food}, {restaurant.crowdedness}, {restaurant.length_of_stay}, {restaurant.food_quality} )"
-#             )
+def print_restaurants(label, restaurants_list):
+    print(f"{label}:")
+    if not restaurants_list:
+        print("No restaurants in this list.")
+    else:
+        for restaurant in restaurants_list:
+            print(
+                f"- {restaurant.name} ({restaurant.area}, {restaurant.pricerange}, {restaurant.food}, {restaurant.crowdedness}, {restaurant.length_of_stay}, {restaurant.food_quality} )"
+            )
 
 
 keywords_2 = {
@@ -372,8 +373,22 @@ class Helpers:
                 )
             ]
 
+            print_restaurants("not selected restaurants", not_selected_restaurants)
+
             if not not_selected_restaurants:
-                return ""
+                if len(state.found_restaurants1) == 1:
+                    return "This is the only restaurant that meets your preferences."
+                elif len(state.found_restaurants1) == 2:
+                    return f"The restaurant {restaurant_names[1]} also meets your preferences."
+                else:
+                    restaurant_names = [
+                        restaurant.name for restaurant in state.found_restaurants1
+                    ]
+                    restaurant_names_string = (
+                        ", ".join(restaurant_names[:-1])
+                        + f" and {restaurant_names[-1]}"
+                    )
+                    return f"The restaurants {restaurant_names_string} also meet your preferences."
 
             preferences_string_list = Helpers.create_additional_preference_list(
                 state.additional_requirements
@@ -452,6 +467,12 @@ class Helpers:
         Moves the state to 'AskForConfirmation1' and returns the corresponding system utterance.
         """
         state.current_state = "AskForConfirmation1"
+        state.additional_requirements = {
+            "touristic": "any",
+            "romantic": "any",
+            "children": "any",
+            "assignedseats": "any",
+        }
 
         if len(state.user_preferences) != 3:
             raise ValueError(
@@ -1024,13 +1045,23 @@ class Dialog_Acts:
         post_words = ["post"]
         phone_words = ["phone"]
         if get_closest_word(user_input, address_words):
-            output_text = f"The address of {state.currently_selected_restaurant.name} is on {state.currently_selected_restaurant.address}. "
+            if str(state.currently_selected_restaurant.address) != "nan":
+                output_text += f"The address of {state.currently_selected_restaurant.name} is on {state.currently_selected_restaurant.address}. "
+            else:
+                output_text += f"The address of {state.currently_selected_restaurant.name} is not in our database. "
 
         if get_closest_word(user_input, post_words):
-            output_text += f"The post code of {state.currently_selected_restaurant.name} is {state.currently_selected_restaurant.postcode}. "
+            if str(state.currently_selected_restaurant.postcode) != "nan":
+                print("koekies: ", state.currently_selected_restaurant.postcode)
+                output_text += f"The post code of {state.currently_selected_restaurant.name} is {state.currently_selected_restaurant.postcode}. "
+            else:
+                output_text += f"The post code of {state.currently_selected_restaurant.name} is not in our database. "
 
         if get_closest_word(user_input, phone_words):
-            output_text += f"The phone number of {state.currently_selected_restaurant.name} is {state.currently_selected_restaurant.phone}."
+            if str(state.currently_selected_restaurant.phone) != "nan":
+                output_text += f"The phone number of {state.currently_selected_restaurant.name} is {state.currently_selected_restaurant.phone}."
+            else:
+                output_text += f"The phone number of {state.currently_selected_restaurant.name} is not in our database. "
 
         if new_additional_preference:
             state.current_state = "AskForMissingInfo2"

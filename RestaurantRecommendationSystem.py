@@ -13,9 +13,9 @@ import uuid
 #############################        CHANGE THE PATH TO MATCH YOUR COMPUTER           #############################
 ##################################################################################################################
 
-file_path_restaurants = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\Part 2\\MAIRS-group-19\\MAIRS-group-19\\restaurant_info2.csv"
+file_path_restaurants = "YOUR_PATH\\restaurant_info2.csv"
 
-file_path_dialog = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\Part 2\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
+file_path_dialog = "YOUR_PATH\\dialog_acts.dat"
 
 allow_dialog_restarts: bool = True
 use_delay: bool = False
@@ -23,7 +23,7 @@ output_in_caps: bool = False
 use_baseline_as_classifier: bool = False
 
 # Give a random transparency level. If you want to test it, manually set it to transparency of 0, 1 or 2
-transparency_level = 2  # random.randint(0, 2)
+transparency_level = random.randint(0, 2)
 """
     Transparency levels are about the recommendation of the system:
     0 = System utterance consists of the restaurant only.
@@ -189,7 +189,7 @@ class SystemDialog:
 
     def save_dialog(self, dialog_log):
         dialog_id = uuid.uuid4()
-        filename = f"dialog_{dialog_id}.txt"
+        filename = f"T{transparency_level} dialog_{dialog_id}.txt"
 
         # Open het bestand en schrijf de dialoog erin
         with open(filename, "w") as f:
