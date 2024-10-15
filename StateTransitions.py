@@ -7,6 +7,16 @@ import difflib
 ##################################################################################################################
 #############################        CHANGE THE PATH TO MATCH YOUR COMPUTER           #############################
 ##################################################################################################################
+def print_restaurants(label, restaurants_list):
+    print(f"{label}:")
+    if not restaurants_list:
+        print("No restaurants in this list.")
+    else:
+        for restaurant in restaurants_list:
+            print(
+                f"- {restaurant.name} ({restaurant.area}, {restaurant.pricerange}, {restaurant.food}, {restaurant.crowdedness}, {restaurant.length_of_stay}, {restaurant.food_quality} )"
+            )
+
 
 keywords_2 = {
     "touristic": ["touristic"],
@@ -103,23 +113,23 @@ class Helpers:
         ):
             state.current_state = "AskForMissingInfo1"
             state.additional_requirements = {
-                "touristic": "",
-                "romantic": "",
-                "children": "",
-                "assignedseats": "",
+                "touristic": "any",
+                "romantic": "any",
+                "children": "any",
+                "assignedseats": "any",
             }
-            return "Sorry but you can not choose a restaurant with both those requirement together (romantic and a assigned seat), can you change your requirement please"
+            return "Sorry but you can not choose a restaurant with both those requirement together (romantic and with assigned seats), can you change your requirement please"
         if (state.additional_requirements["romantic"] == "romantic") and (
             state.additional_requirements["children"] == "children"
         ):
             state.current_state = "AskForMissingInfo1"
             state.additional_requirements = {
-                "touristic": "",
-                "romantic": "",
-                "children": "",
-                "assignedseats": "",
+                "touristic": "any",
+                "romantic": "any",
+                "children": "any",
+                "assignedseats": "any",
             }
-            return "Sorry but you can not choose  a restaurant with both those requirement together (romantic and a children-friendly), can you change your requirement please"
+            return "Sorry but you can not choose a restaurant with both those requirement together (romantic and a children-friendly), can you change your requirement please"
         # First find the restaurants based on the user preferences
         Helpers.find_restaurants1(state)
 
@@ -129,12 +139,11 @@ class Helpers:
         )
 
         # If no restaurant is found:
-        if len(state.found_restaurants1) == 0:
-            state.current_state = "InformThatThereIsNoRestaurant"
+        if len(state.filtered_restaurants) == 0:
             return Helpers.tell_no_restaurant_found(state)
 
         # Select a restaurant and give this recommendation to the user
-        state.currently_selected_restaurant = state.found_restaurants1[0]
+        state.currently_selected_restaurant = state.filtered_restaurants[0]
         state.current_state = "GiveRestaurantRecommendation"
         return Helpers.sell_restaurant(state)
 
@@ -184,10 +193,18 @@ class Helpers:
         Input is a list of possible restaurants and additional requirements.
         Output is a list of restaurants that meet the aditional requirements.
         """
+        print("These are possible restaurants: ")
+        for restaurant in possible_restaurants:
+            print(restaurant.name, restaurant.length_of_stay, restaurant.crowdedness)
+
+        print("These are the additional requirements: ", additional_requirements)
         filtered_restaurants: list[Restaurant] = possible_restaurants
+
+        print(print_restaurants("filtered restaurants 1: ", filtered_restaurants))
 
         # Filter for touristic restaurants: cheap, good or excellent food quality, food type not romanian
         if additional_requirements["touristic"] == "touristic":
+            print("in the touristic one")
             filtered_restaurants = [
                 restaurant
                 for restaurant in filtered_restaurants
@@ -196,15 +213,18 @@ class Helpers:
                 and restaurant.food != "romanian"
             ]
         # Filter for not touristic restaurants: not cheap and good or excellent food quality
-        elif additional_requirements["touristic"] != "any":
+        elif additional_requirements["touristic"] == "not touristic":
+            print("in the not touristic one")
             filtered_restaurants = [
                 restaurant
                 for restaurant in filtered_restaurants
-                if not (
-                    restaurant.pricerange == "cheap"
+                if (
+                    restaurant.pricerange != "cheap"
                     and restaurant.food_quality in ["good", "excellent"]
                 )
             ]
+
+        print(print_restaurants("filtered restaurants 2: ", filtered_restaurants))
 
         # Filter for assigned seats: restaurants that are busy
         if additional_requirements["assignedseats"] == "assignedseats":
@@ -215,7 +235,8 @@ class Helpers:
             ]
 
         # Filter for child-friendly: restaurants where the stay is not long
-        if additional_requirements["children"] == "children":
+        if additional_requirements["children"] != "any":
+            print("FILTER VOOR KINDEREN")
             filtered_restaurants = [
                 restaurant
                 for restaurant in filtered_restaurants
@@ -281,8 +302,13 @@ class Helpers:
         'Sorry, I couldn't find a cheap italian restaurant in the north.'
         'Sorry, I couldn't find a cheap italian restaurant in any area.'
 
+        Also empties the additional requirements dictionary.
+
         """
         state.current_state = "InformThatThereIsNoRestaurant"
+
+        if state.transparency_level == 0:
+            return "There is no restaurant. Please change your requirements."
 
         # Initialiseer de strings
         price_string = ""
@@ -298,7 +324,47 @@ class Helpers:
             elif key == "area":
                 area_string = f"in the {value}" if value != "any" else "in any area"
 
-        return f"Sorry, I couldn't find a {price_string} {food_string} restaurant {area_string}. Please change your requirements."
+        string_part_1 = f"Sorry, I couldn't find a {price_string} {food_string} restaurant {area_string}"
+        string_part_2 = ". "
+
+        preferences_string_list = Helpers.create_additional_preference_list(
+            state.additional_requirements
+        )
+
+        state.additional_requirements = {
+            "touristic": "any",
+            "romantic": "any",
+            "children": "any",
+            "assignedseats": "any",
+        }
+
+        print("KOEOKJES", preferences_string_list)
+
+        if preferences_string_list:
+            string_part_2 = (
+                f" with these qualities: {', '.join(preferences_string_list)}. "
+            )
+
+        if state.transparency_level == 1:
+            return string_part_1 + string_part_2 + "Please change your requirements."
+        else:
+            restaurant_names = [
+                restaurant.name for restaurant in state.found_restaurants1
+            ]
+            if len(restaurant_names) == 0:
+                restaurant_string = f"There are no {price_string} {food_string} restaurants {area_string}."
+
+            elif len(restaurant_names) == 1:
+                restaurant_string = f"The restaurant {restaurant_names[0]} is a {price_string} {food_string} restaurant {area_string}, but it does not meet your additional requirement(s): {', '.join(preferences_string_list)}."
+            else:
+                restaurant_string = f"The restaurants {', '.join(restaurant_names[:-1])}, are {price_string} {food_string} restaurants {area_string}, but they do not meet your additional requirement(s): {', '.join(preferences_string_list)}."
+
+            return (
+                string_part_1
+                + string_part_2
+                + restaurant_string
+                + " Please change your requirements."
+            )
 
     @staticmethod
     def sell_restaurant(state):
@@ -317,16 +383,6 @@ class Helpers:
                     f.name == restaurant.name for f in state.filtered_restaurants
                 )
             ]
-
-            def print_restaurants(label, restaurants_list):
-                print(f"{label}:")
-                if not restaurants_list:
-                    print("No restaurants in this list.")
-                else:
-                    for restaurant in restaurants_list:
-                        print(
-                            f"- {restaurant.name} ({restaurant.area}, {restaurant.pricerange}, {restaurant.food})"
-                        )
 
             # Print de filtered_restaurants, found_restaurants1 en not_selected_restaurants
             print_restaurants("Filtered Restaurants", state.filtered_restaurants)
@@ -353,40 +409,48 @@ class Helpers:
                 return f"The restaurants {restaurant_names_string} were not chosen, because they do not meet your additional requirements {', '.join(preferences_string_list)}."
 
         def create_reasoning():
-            string = ""
+            reasoning_string = ""
 
             for key, value in state.additional_requirements.items():
                 if value != "any":
                     if key == "children":
-                        string = (
-                            string
-                            + " This restaurant is child-friendly because you are served quickly. "
+                        reasoning_string = (
+                            reasoning_string
+                            + "This restaurant is child-friendly because you are served quickly."
                         )
                     elif key == "touristic":
-                        string = (
-                            string
-                            + " It is a touristic hot-spot due to the cheap prices and the good food. "
+                        reasoning_string = (
+                            reasoning_string
+                            + "It is a touristic hot-spot due to the cheap prices and the good food."
                         )
                     elif key == "not touristic":
-                        string = (
-                            string
-                            + " This is not a touristic place, since the food quality is very average. "
+                        reasoning_string = (
+                            reasoning_string
+                            + "This is not a touristic place, since the food quality is very average."
                         )
                     elif key == "assigned seats":
-                        string = (
-                            string
-                            + " The waiter will assign you a seat, since it is a very busy restaurant. "
+                        reasoning_string = (
+                            reasoning_string
+                            + "The waiter will assign you a seat, since it is a very busy restaurant."
                         )
                     elif key == "romantic":
-                        string = (
-                            string
-                            + " The restaurant is romantic because it allows you to stay for a long time. "
+                        reasoning_string = (
+                            reasoning_string
+                            + "The restaurant is romantic because it allows you to stay for a long time."
                         )
-            return string
+            return reasoning_string
 
-        result_recommendation = f"I recommend {state.currently_selected_restaurant.name} in the {state.currently_selected_restaurant.area} area, serving {state.currently_selected_restaurant.food} cuisine, with {state.currently_selected_restaurant.pricerange} prices."
+        result_recommendation = (
+            f"I recommend {state.currently_selected_restaurant.name}"
+        )
         if state.transparency_level != 0:
-            result_recommendation = result_recommendation + " " + create_reasoning()
+            result_recommendation = (
+                result_recommendation
+                + " "
+                + f"in the {state.currently_selected_restaurant.area} area, serving {state.currently_selected_restaurant.food} cuisine, with {state.currently_selected_restaurant.pricerange} prices."
+                + " "
+                + create_reasoning()
+            )
         if state.transparency_level == 2:
             result_recommendation = (
                 result_recommendation + " " + create_not_chosen_restaurants_utterance()
@@ -445,16 +509,18 @@ class Helpers:
         # List to store preferences
         preferences = []
 
+        print("IN CREATE ADDITIONAL PREFERENCES", additional_requirements)
         # Check each preference and append the non-empty ones
         if additional_requirements["touristic"] != "any":
-            preferences.append(f" Touristic")
+            preferences.append(f"{additional_requirements['touristic']}")
         if additional_requirements["romantic"] != "any":
-            preferences.append(f" Romantic")
+            preferences.append(f"{additional_requirements['romantic']}")
         if additional_requirements["children"] != "any":
-            preferences.append(f" Children allowed")
+            preferences.append(f"{additional_requirements['children']}")
         if additional_requirements["assignedseats"] != "any":
             preferences.append(f"with {additional_requirements['assignedseats']}")
 
+        print("final preferences: ", preferences)
         return preferences
 
     @staticmethod
@@ -515,11 +581,13 @@ class Helpers:
                 if word in user_input:
                     word_idx = user_input.find(word)
                     negated = any(neg in user_input[:word_idx] for neg in negations)
+                    print("negated = ", negated, "result = ", result, "key = ", key)
 
                     if negated:
                         result[key] = f"not {word}"
                     else:
                         result[key] = word
+                    print("result after: ", result)
                     break
         for key, value in result.items():
             if value == "":
@@ -958,6 +1026,7 @@ class Dialog_Acts:
         if not other_recommendations:
             system_utterance = f"The restaurant {state.currently_selected_restaurant.name} is the only restaurant that meets your preferences."
         else:
+            print("in reqmore als er nog andere recommendations zijn")
             state.currently_selected_restaurant = random.choice(other_recommendations)
             system_utterance = Helpers.sell_restaurant(state)
         return system_utterance
@@ -1015,10 +1084,10 @@ class Dialog_Acts:
             state.filtered_restaurants = []
             state.currently_selected_restaurant = None
             state.additional_requirements = {
-                "touristic": "",
-                "romantic": "",
-                "children": "",
-                "assignedseats": "",
+                "touristic": "any",
+                "romantic": "any",
+                "children": "any",
+                "assignedseats": "any",
             }
             return state.last_system_utterance
         else:
@@ -1047,8 +1116,8 @@ class State:
         self.currently_selected_restaurant: Restaurant = None
         self.file_path_restaurants = file_path_restaurants
         self.additional_requirements = {
-            "touristic": "",
-            "romantic": "",
-            "children": "",
-            "assignedseats": "",
+            "touristic": "any",
+            "romantic": "any",
+            "children": "any",
+            "assignedseats": "any",
         }

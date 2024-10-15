@@ -23,7 +23,7 @@ output_in_caps: bool = False
 use_baseline_as_classifier: bool = False
 
 # Give a random transparency level. If you want to test it, manually set it to transparency of 0, 1 or 2
-transparency_level = random.randint(0, 2)
+transparency_level = 2  # random.randint(0, 2)
 """
     Transparency levels are about the recommendation of the system:
     0 = System utterance consists of the restaurant only.
