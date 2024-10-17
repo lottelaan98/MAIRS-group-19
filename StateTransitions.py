@@ -373,8 +373,6 @@ class Helpers:
                 )
             ]
 
-            print_restaurants("not selected restaurants", not_selected_restaurants)
-
             if not not_selected_restaurants:
                 if len(state.found_restaurants1) == 1:
                     return "This is the only restaurant that meets your preferences."
@@ -384,6 +382,8 @@ class Helpers:
                     restaurant_names = [
                         restaurant.name for restaurant in state.found_restaurants1
                     ]
+                    del restaurant_names[0]
+
                     restaurant_names_string = (
                         ", ".join(restaurant_names[:-1])
                         + f" and {restaurant_names[-1]}"
@@ -1052,7 +1052,6 @@ class Dialog_Acts:
 
         if get_closest_word(user_input, post_words):
             if str(state.currently_selected_restaurant.postcode) != "nan":
-                print("koekies: ", state.currently_selected_restaurant.postcode)
                 output_text += f"The post code of {state.currently_selected_restaurant.name} is {state.currently_selected_restaurant.postcode}. "
             else:
                 output_text += f"The post code of {state.currently_selected_restaurant.name} is not in our database. "
