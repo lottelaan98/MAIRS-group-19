@@ -19,7 +19,8 @@ file_path_dialog = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\M
 ##################################################################################################################
 #############################        CHANGE TASK & TRANSPARENCY LEVEL           #############################
 ##################################################################################################################
-
+# TODO: CHANGE PARTICIPANT ID if there is a new participant
+participant_id = 0
 
 # TODO: CHANGE TASK
 task = "Find a cheap Chinese restaurant in the city center and ask for their phone number. You prefer that the restaurant is romantic. However, when there is no such restaurant, you are fine with a not romantic restaurant.  When you are done, close the conversation by saying bye. "
@@ -209,11 +210,12 @@ class SystemDialog:
 
     def save_dialog(self, dialog_log):
         dialog_id = uuid.uuid4()
-        filename = f"T{transparency_level} dialog_{dialog_id}.txt"
+        filename = f"P{participant_id} T{transparency_level} dialog_{dialog_id}.txt"
 
         # Open het bestand en schrijf de dialoog erin
         with open(filename, "w") as f:
             f.write(f"Dialog ID: {dialog_id}\n")
+            f.write(f"Participant id: {participant_id} \n")
             f.write(f"Turn Index: {self.turn_index}\n")
             f.write(f"Transparency Level: {transparency_level}\n")
             f.write(f"TASK: {task} \n \n")
