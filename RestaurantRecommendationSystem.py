@@ -6,24 +6,37 @@ from StateTransitions import keywords_1
 import pandas as pd
 import time
 from Baseline2 import Baseline2
-import random
 import uuid
 
 ##################################################################################################################
 #############################        CHANGE THE PATH TO MATCH YOUR COMPUTER           #############################
 ##################################################################################################################
 
-file_path_restaurants = "YOUR_PATH\\restaurant_info2.csv"
+file_path_restaurants = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\Part 2\\MAIRS-group-19\\MAIRS-group-19\\restaurant_info2.csv"
 
-file_path_dialog = "YOUR_PATH\\dialog_acts.dat"
+file_path_dialog = "C:\\Users\\certj\\OneDrive - Universiteit Utrecht\\School\\Methods in AI research\\PROJECT GROUP 19\\Part 2\\MAIRS-group-19\\MAIRS-group-19\\dialog_acts.dat"
 
-allow_dialog_restarts: bool = True
-use_delay: bool = False
-output_in_caps: bool = False
-use_baseline_as_classifier: bool = False
+##################################################################################################################
+#############################        CHANGE TASK & TRANSPARENCY LEVEL           #############################
+##################################################################################################################
 
-# Give a random transparency level. If you want to test it, manually set it to transparency of 0, 1 or 2
-transparency_level = random.randint(0, 2)
+
+# TODO: CHANGE TASK
+task = "Find a cheap Chinese restaurant in the city center and ask for their phone number. You prefer that the restaurant is romantic. However, when there is no such restaurant, you are fine with a not romantic restaurant.  When you are done, close the conversation by saying bye. "
+
+"""
+Choose one of the 3:
+
+1. Find a cheap Chinese restaurant in the city center and ask for their phone number. You prefer that the restaurant is romantic. However, when there is no such restaurant, you are fine with a not romantic restaurant.  When you are done, close the conversation by saying bye. 
+
+2. Ask the chatbot for a British restaurant in any area and you don't care about the price range. You have an additional preference, that is that you want to make a reservation. Do not go for the first option that the system gives you. Ask the phone number and the address of the restaurant you want. When you are done, close the conversation by saying bye. 
+
+3. You want to reserve a romantic Italian restaurant in the east of town, if there is no Italian restaurant available find a Persian restaurant. Ask for their address, postcode and phone number. When you are done, close the conversation by saying bye.
+
+"""
+# TODO CHANGE TRANSPARENCY LEVEL TO SUIT YOUR PARTICIPANT
+# Choose level 0, 1 or 2
+transparency_level = 0
 """
     Transparency levels are about the recommendation of the system:
     0 = System utterance consists of the restaurant only.
@@ -31,6 +44,12 @@ transparency_level = random.randint(0, 2)
     2 = System utterance consists of the currently selected restaurant, why we choose that and why we did not choose the others.
 
 """
+
+
+allow_dialog_restarts: bool = True
+use_delay: bool = False
+output_in_caps: bool = False
+use_baseline_as_classifier: bool = False
 
 
 def load_data() -> pd.DataFrame:
@@ -152,6 +171,7 @@ class SystemDialog:
             return self.acts.thankyou(self.state, user_input)
 
     def dialog_system(self):
+        print("THIS IS YOUR TASK: ", task)
         self.state.last_system_utterance = "System: Hello, welcome to the UU restaurant system! You can ask for restaurants by area, price range or food type. How may I help you?"
 
         # Print the welcome text
@@ -195,7 +215,8 @@ class SystemDialog:
         with open(filename, "w") as f:
             f.write(f"Dialog ID: {dialog_id}\n")
             f.write(f"Turn Index: {self.turn_index}\n")
-            f.write(f"Transparency Level: {transparency_level}\n\n")
+            f.write(f"Transparency Level: {transparency_level}\n")
+            f.write(f"TASK: {task} \n \n")
 
             # Schrijf alle dialoogregels naar het bestand
             for line in dialog_log:
